@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Dashboard - MediMate</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Poppins', sans-serif; background: #f8fafc; }
+    </style>
+</head>
+<body class="min-h-screen">
+    <script>
+        if (!localStorage.getItem('loggedInUser')) {
+            window.location.href = 'login.html?redirect=dashboard.html';
+        }
+    </script>
+    <nav class="bg-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <i class="fas fa-heartbeat text-primary text-2xl mr-2"></i>
+                    <span class="text-xl font-bold text-gray-800">MediMate</span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="index.html" class="text-gray-700 hover:text-primary font-medium">Home</a>
+                    <a href="chatbot.html" class="text-gray-700 hover:text-primary font-medium">Chatbot</a>
+                    <a href="medicines.html" class="text-gray-700 hover:text-primary font-medium">Medicines</a>
+                    <a href="history.html" class="text-gray-700 hover:text-primary font-medium">History</a>
+                    <a href="profile.html" class="text-gray-700 hover:text-primary font-medium">Profile</a>
+                    <!-- User info -->
+                    <div id="navbarUser" class="flex items-center space-x-2"></div>
+                </div>
+            </div>
+        </div>
+    </nav>
+    <div class="max-w-3xl mx-auto mt-10 bg-white rounded-lg shadow p-8">
+        <h1 class="text-3xl font-bold text-primary mb-6">Welcome, <span id="userName"></span></h1>
+        <div class="mb-8">
+            <h2 class="text-xl font-semibold mb-2">Your Details</h2>
+            <ul class="list-disc ml-6 text-gray-700" id="userDetails"></ul>
+        </div>
+        <div>
+            <h2 class="text-xl font-semibold mb-2">Your Reports</h2>
+            <div id="reportsList" class="space-y-4"></div>
+        </div>
+    </div>
+    <script>
+    // Display user details
+    const user = JSON.parse(localStorage.getItem('loggedInUser'));
+    document.getElementById('userName').textContent = user.name || user.email;
+    const details = [
+        `Name: ${user.name || ''}`,
+        `Email: ${user.email || ''}`,
+        user.phone ? `Phone: ${user.phone}` : '',
+        user.age ? `Age: ${user.age}` : '',
+        user.gender ? `Gender: ${user.gender}` : ''
+    ].filter(Boolean);
+    document.getElementById('userDetails').innerHTML = details.map(d => `<li>${d}</li>`).join('');
+    // Simulate reports (should be fetched per user)
+    let reports = JSON.parse(localStorage.getItem('reports') || '[]');
+    reports = reports.filter(r => r.userEmail === user.email);
+    const reportsList = document.getElementById('reportsList');
+    if (reports.length === 0) {
+        reportsList.innerHTML = '<div class="text-gray-500">No reports found.</div>';
+    } else {
+        reportsList.innerHTML = reports.map((r, i) => `
+            <div class="bg-gray-100 p-4 rounded flex justify-between items-center">
+                <div>
+                    <div class="font-semibold">${r.title || 'Report ' + (i+1)}</div>
+                    <div class="text-sm text-gray-600">${r.date || ''}</div>
+                </div>
+                <button onclick="downloadReport(${i})" class="bg-primary text-white px-4 py-2 rounded hover:bg-blue-700 font-semibold"><i class="fas fa-download mr-2"></i>Download</button>
+            </div>
+        `).join('');
+    }
+    // Download report as text file
+    window.downloadReport = function(idx) {
+        const report = reports[idx];
+        const blob = new Blob([
+            `Title: ${report.title}\nDate: ${report.date}\nDetails: ${report.details || ''}`
+        ], { type: 'text/plain' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = (report.title || 'report') + '.txt';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    }
+
+    // Show user name and icon in navbar
+    const navbarUser = document.getElementById('navbarUser');
+    if (user && navbarUser) {
+        navbarUser.innerHTML = `<i class='fas fa-user-circle text-primary text-2xl'></i><span class='font-medium text-gray-800'>${user.name || user.email}</span> <button id='logoutBtn' class='ml-2 px-2 py-1 bg-red-500 text-white rounded hover:bg-red-700 text-xs'>Logout</button>`;
+        document.getElementById('logoutBtn').onclick = function() {
+            localStorage.removeItem('loggedInUser');
+            window.location.href = 'index.html';
+        };
+    }
+    </script>
+</body>
+</html> 

@@ -1,0 +1,1191 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Medical History - MediMate</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: "#3b82f6",
+              secondary: "#10b981",
+              accent: "#8b5cf6",
+              dark: "#1e293b",
+              light: "#f8fafc",
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
+
+      body {
+        font-family: "Poppins", sans-serif;
+        background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+      }
+
+      .card-hover {
+        transition: all 0.3s ease;
+      }
+
+      .card-hover:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
+          0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      }
+    </style>
+  </head>
+  <body class="min-h-screen">
+    <script>
+      if (!localStorage.getItem("loggedInUser")) {
+        window.location.href = "login.html?redirect=history.html";
+      }
+    </script>
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg sticky top-0 z-50">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-16">
+          <div class="flex items-center">
+            <div class="flex-shrink-0 flex items-center">
+              <i class="fas fa-heartbeat text-primary text-2xl mr-2"></i>
+              <span class="text-xl font-bold text-gray-800">MediMate</span>
+            </div>
+            <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
+              <a
+                href="index.html"
+                class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                >Home</a
+              >
+              <a
+                href="chatbot.html"
+                class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                >Chatbot</a
+              >
+              <a
+                href="medicines.html"
+                class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                >Medicines</a
+              >
+              <a
+                href="history.html"
+                class="border-primary text-gray-900 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                >History</a
+              >
+              <a
+                href="profile.html"
+                class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                >Profile</a
+              >
+            </div>
+          </div>
+          <div class="hidden sm:ml-6 sm:flex sm:items-center space-x-4">
+            <button
+              id="bookAppointmentBtn"
+              class="bg-secondary text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition inline-flex items-center"
+            >
+              <i class="fas fa-calendar-check mr-2"></i>Book Appointment
+            </button>
+            <button
+              id="cartBtn"
+              class="relative text-gray-700 hover:text-primary focus:outline-none"
+            >
+              <i class="fas fa-shopping-cart text-2xl"></i>
+              <span
+                id="cartCount"
+                class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full px-1.5"
+                >0</span
+              >
+            </button>
+            <div id="navbarUser" class="flex items-center space-x-2"></div>
+          </div>
+        </div>
+      </div>
+    </nav>
+    <script>
+      // Show user name and icon in navbar
+      const navbarUser = document.getElementById("navbarUser");
+      const user = JSON.parse(localStorage.getItem("loggedInUser"));
+      if (user && navbarUser) {
+        navbarUser.innerHTML = `<i class='fas fa-user-circle text-primary text-2xl'></i><span class='font-medium text-gray-800'>${
+          user.name || user.email
+        }</span> <button id='logoutBtn' class='ml-2 px-2 py-1 bg-red-500 text-white rounded hover:bg-red-700 text-xs'>Logout</button>`;
+        document.getElementById("logoutBtn").onclick = function () {
+          localStorage.removeItem("loggedInUser");
+          window.location.href = "index.html";
+        };
+      } else if (navbarUser) {
+        navbarUser.innerHTML = `<a href='login.html' class='bg-primary text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition inline-flex items-center'>Sign In</a>`;
+      }
+    </script>
+
+    <!-- History Section -->
+    <section class="py-16">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-12">
+          <h1 class="text-3xl font-extrabold text-gray-900 sm:text-4xl">
+            Your Medical History
+          </h1>
+          <p class="mt-3 text-xl text-gray-500">
+            View and manage your past diagnoses and treatments
+          </p>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+          <div class="border-b border-gray-200">
+            <div class="p-6">
+              <h2 class="text-xl font-bold text-gray-800">Recent Diagnoses</h2>
+            </div>
+          </div>
+
+          <div class="divide-y divide-gray-200">
+            <div class="p-6 hover:bg-gray-50 transition">
+              <div class="flex justify-between items-start">
+                <div>
+                  <h3 class="text-lg font-semibold text-gray-800">
+                    Common Cold
+                  </h3>
+                  <p class="text-gray-600 mt-1">Fever, headache, body aches</p>
+                  <div class="mt-2 flex items-center text-sm text-gray-500">
+                    <i class="far fa-calendar mr-2"></i>
+                    <span>April 1, 2024</span>
+                  </div>
+                </div>
+                <span
+                  class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium"
+                  >Completed</span
+                >
+              </div>
+              <div class="mt-4">
+                <h4 class="font-semibold text-gray-700">
+                  Recommended Treatment:
+                </h4>
+                <ul class="mt-2 space-y-1">
+                  <li class="flex items-center">
+                    <i
+                      class="fas fa-check-circle text-green-500 mr-2 text-sm"
+                    ></i>
+                    <span>Rest and hydration</span>
+                  </li>
+                  <li class="flex items-center">
+                    <i
+                      class="fas fa-check-circle text-green-500 mr-2 text-sm"
+                    ></i>
+                    <span>Paracetamol 500mg twice daily</span>
+                  </li>
+                  <li class="flex items-center">
+                    <i
+                      class="fas fa-check-circle text-green-500 mr-2 text-sm"
+                    ></i>
+                    <span>Vitamin C supplements</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="p-6 hover:bg-gray-50 transition">
+              <div class="flex justify-between items-start">
+                <div>
+                  <h3 class="text-lg font-semibold text-gray-800">
+                    Allergic Rhinitis
+                  </h3>
+                  <p class="text-gray-600 mt-1">
+                    Sneezing, runny nose, itchy eyes
+                  </p>
+                  <div class="mt-2 flex items-center text-sm text-gray-500">
+                    <i class="far fa-calendar mr-2"></i>
+                    <span>March 15, 2024</span>
+                  </div>
+                </div>
+                <span
+                  class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium"
+                  >Completed</span
+                >
+              </div>
+              <div class="mt-4">
+                <h4 class="font-semibold text-gray-700">
+                  Recommended Treatment:
+                </h4>
+                <ul class="mt-2 space-y-1">
+                  <li class="flex items-center">
+                    <i
+                      class="fas fa-check-circle text-green-500 mr-2 text-sm"
+                    ></i>
+                    <span>Cetrizine 10mg once daily</span>
+                  </li>
+                  <li class="flex items-center">
+                    <i
+                      class="fas fa-check-circle text-green-500 mr-2 text-sm"
+                    ></i>
+                    <span>Avoid known allergens</span>
+                  </li>
+                  <li class="flex items-center">
+                    <i
+                      class="fas fa-check-circle text-green-500 mr-2 text-sm"
+                    ></i>
+                    <span>Saline nasal rinse</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="p-6 hover:bg-gray-50 transition">
+              <div class="flex justify-between items-start">
+                <div>
+                  <h3 class="text-lg font-semibold text-gray-800">Migraine</h3>
+                  <p class="text-gray-600 mt-1">
+                    Severe headache, nausea, light sensitivity
+                  </p>
+                  <div class="mt-2 flex items-center text-sm text-gray-500">
+                    <i class="far fa-calendar mr-2"></i>
+                    <span>February 28, 2024</span>
+                  </div>
+                </div>
+                <span
+                  class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-medium"
+                  >In Progress</span
+                >
+              </div>
+              <div class="mt-4">
+                <h4 class="font-semibold text-gray-700">
+                  Recommended Treatment:
+                </h4>
+                <ul class="mt-2 space-y-1">
+                  <li class="flex items-center">
+                    <i
+                      class="fas fa-check-circle text-green-500 mr-2 text-sm"
+                    ></i>
+                    <span>Rest in dark, quiet room</span>
+                  </li>
+                  <li class="flex items-center">
+                    <i
+                      class="fas fa-check-circle text-green-500 mr-2 text-sm"
+                    ></i>
+                    <span>Ibuprofen 400mg as needed</span>
+                  </li>
+                  <li class="flex items-center">
+                    <i
+                      class="fas fa-check-circle text-green-500 mr-2 text-sm"
+                    ></i>
+                    <span>Identify and avoid triggers</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-12 grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div class="bg-white rounded-xl shadow-lg p-6">
+            <h2 class="text-xl font-bold mb-4 text-gray-800">
+              Symptom Tracker
+            </h2>
+            <div
+              class="h-64 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg flex items-center justify-center"
+            >
+              <div class="text-center">
+                <i class="fas fa-chart-line text-4xl text-primary mb-4"></i>
+                <p class="text-gray-600">
+                  Your symptom trends will appear here
+                </p>
+                <button
+                  class="mt-4 bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+                >
+                  Add Symptoms
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-xl shadow-lg p-6">
+            <h2 class="text-xl font-bold mb-4 text-gray-800">
+              Medication History
+            </h2>
+            <div class="space-y-4">
+              <div class="flex items-center p-3 bg-blue-50 rounded-lg">
+                <div
+                  class="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center"
+                >
+                  <i class="fas fa-pills text-blue-600"></i>
+                </div>
+                <div class="ml-4">
+                  <h3 class="font-medium text-gray-900">Paracetamol</h3>
+                  <p class="text-sm text-gray-600">500mg, 2 tablets daily</p>
+                </div>
+                <div class="ml-auto text-sm text-gray-500">
+                  Until Apr 10, 2024
+                </div>
+              </div>
+
+              <div class="flex items-center p-3 bg-green-50 rounded-lg">
+                <div
+                  class="flex-shrink-0 w-10 h-10 bg-green-100 rounded-full flex items-center justify-center"
+                >
+                  <i class="fas fa-capsules text-green-600"></i>
+                </div>
+                <div class="ml-4">
+                  <h3 class="font-medium text-gray-900">Cetrizine</h3>
+                  <p class="text-sm text-gray-600">10mg, 1 tablet daily</p>
+                </div>
+                <div class="ml-auto text-sm text-gray-500">
+                  Until Mar 22, 2024
+                </div>
+              </div>
+
+              <div class="flex items-center p-3 bg-purple-50 rounded-lg">
+                <div
+                  class="flex-shrink-0 w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center"
+                >
+                  <i class="fas fa-tablets text-purple-600"></i>
+                </div>
+                <div class="ml-4">
+                  <h3 class="font-medium text-gray-900">Ibuprofen</h3>
+                  <p class="text-sm text-gray-600">200mg, as needed</p>
+                </div>
+                <div class="ml-auto text-sm text-gray-500">
+                  Until Feb 28, 2024
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-12 bg-white rounded-xl shadow-lg p-6">
+          <h2 class="text-xl font-bold mb-4 text-gray-800">Export Options</h2>
+          <div class="flex flex-wrap gap-4">
+            <button
+              id="downloadPdfBtn"
+              class="flex items-center bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+            >
+              <i class="fas fa-download mr-2"></i>
+              Download PDF
+            </button>
+            <button
+              id="printHistoryBtn"
+              class="flex items-center bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition"
+            >
+              <i class="fas fa-print mr-2"></i>
+              Print History
+            </button>
+            <button
+              id="shareDoctorBtn"
+              class="flex items-center bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition"
+            >
+              <i class="fas fa-share-alt mr-2"></i>
+              Share with Doctor
+            </button>
+          </div>
+          <div id="exportStatus" class="mt-4 text-center hidden">
+            <div
+              class="inline-flex items-center px-4 py-2 rounded-lg bg-green-100 text-green-800"
+            >
+              <i class="fas fa-check-circle mr-2"></i>
+              <span id="statusMessage">Operation completed successfully!</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white mt-16">
+      <div class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+          <div>
+            <div class="flex items-center">
+              <i class="fas fa-heartbeat text-primary text-2xl mr-2"></i>
+              <span class="text-xl font-bold">MediMate</span>
+            </div>
+            <p class="mt-4 text-gray-400">
+              Your trusted AI-powered medical assistant for instant health
+              insights and support.
+            </p>
+          </div>
+
+          <div>
+            <h3 class="text-lg font-semibold">Services</h3>
+            <ul class="mt-4 space-y-2">
+              <li>
+                <a href="chatbot.html" class="text-gray-400 hover:text-white"
+                  >Medical Chatbot</a
+                >
+              </li>
+              <li>
+                <a href="#" class="text-gray-400 hover:text-white"
+                  >Symptom Checker</a
+                >
+              </li>
+              <li>
+                <a href="medicines.html" class="text-gray-400 hover:text-white"
+                  >E-Pharmacy</a
+                >
+              </li>
+              <li>
+                <a href="history.html" class="text-gray-400 hover:text-white"
+                  >Health Records</a
+                >
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 class="text-lg font-semibold">Company</h3>
+            <ul class="mt-4 space-y-2">
+              <li>
+                <a href="#" class="text-gray-400 hover:text-white">About Us</a>
+              </li>
+              <li>
+                <a href="#" class="text-gray-400 hover:text-white">Careers</a>
+              </li>
+              <li>
+                <a href="#" class="text-gray-400 hover:text-white"
+                  >Privacy Policy</a
+                >
+              </li>
+              <li>
+                <a href="#" class="text-gray-400 hover:text-white"
+                  >Terms of Service</a
+                >
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 class="text-lg font-semibold">Contact</h3>
+            <ul class="mt-4 space-y-2">
+              <li class="flex items-center">
+                <i class="fas fa-envelope mr-2 text-gray-400"></i>
+                <span class="text-gray-400">support@medimate.com</span>
+              </li>
+              <li class="flex items-center">
+                <i class="fas fa-phone mr-2 text-gray-400"></i>
+                <span class="text-gray-400">+1 (555) 123-4567</span>
+              </li>
+              <li class="flex items-center">
+                <i class="fas fa-map-marker-alt mr-2 text-gray-400"></i>
+                <span class="text-gray-400">San Francisco, CA</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div
+          class="mt-12 pt-8 border-t border-gray-700 flex flex-col md:flex-row justify-between items-center"
+        >
+          <p class="text-gray-400">© 2023 MediMate. All rights reserved.</p>
+          <div class="flex space-x-6 mt-4 md:mt-0">
+            <a href="#" class="text-gray-400 hover:text-white">
+              <i class="fab fa-facebook-f"></i>
+            </a>
+            <a href="#" class="text-gray-400 hover:text-white">
+              <i class="fab fa-twitter"></i>
+            </a>
+            <a href="#" class="text-gray-400 hover:text-white">
+              <i class="fab fa-instagram"></i>
+            </a>
+            <a href="#" class="text-gray-400 hover:text-white">
+              <i class="fab fa-linkedin-in"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </footer>
+    <!-- Book Appointment Modal -->
+    <div
+      id="appointmentModal"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 hidden"
+    >
+      <div class="bg-white rounded-lg shadow-lg w-full max-w-md p-6 relative">
+        <button
+          id="closeModalBtn"
+          class="absolute top-2 right-2 text-gray-400 hover:text-gray-600 text-2xl"
+        >
+          &times;
+        </button>
+        <h2 class="text-2xl font-bold mb-4 text-primary">Book Appointment</h2>
+        <form id="appointmentForm" class="space-y-4">
+          <div>
+            <label class="block text-gray-700">Doctor</label>
+            <select
+              name="doctor"
+              required
+              class="w-full border rounded px-3 py-2"
+            >
+              <option value="">Select Doctor</option>
+              <option value="Dr. Emily Rodriguez">Dr. Emily Rodriguez</option>
+              <option value="Dr. John Smith">Dr. John Smith</option>
+              <option value="Dr. Priya Patel">Dr. Priya Patel</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-gray-700">Date</label>
+            <input
+              type="date"
+              name="date"
+              required
+              class="w-full border rounded px-3 py-2"
+            />
+          </div>
+          <div>
+            <label class="block text-gray-700">Time</label>
+            <input
+              type="time"
+              name="time"
+              required
+              class="w-full border rounded px-3 py-2"
+            />
+          </div>
+          <div>
+            <label class="block text-gray-700">Reason</label>
+            <textarea
+              name="reason"
+              required
+              class="w-full border rounded px-3 py-2"
+              placeholder="Describe your reason..."
+            ></textarea>
+          </div>
+          <button
+            type="submit"
+            class="w-full bg-primary text-white py-2 rounded hover:bg-blue-700 font-semibold"
+          >
+            Book Appointment
+          </button>
+        </form>
+        <div
+          id="appointmentSuccess"
+          class="hidden mt-4 text-green-600 font-semibold text-center"
+        >
+          Appointment booked successfully!
+        </div>
+      </div>
+    </div>
+    <!-- Cart Modal -->
+    <div
+      id="cartModal"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 hidden"
+    >
+      <div class="bg-white rounded-lg shadow-lg w-full max-w-md p-6 relative">
+        <button
+          id="closeCartBtn"
+          class="absolute top-2 right-2 text-gray-400 hover:text-gray-600 text-2xl"
+        >
+          &times;
+        </button>
+        <h2 class="text-2xl font-bold mb-4 text-primary">Your Cart</h2>
+        <div id="cartItems"></div>
+        <div class="mt-4 flex justify-between items-center">
+          <span class="font-bold text-lg"
+            >Total: <span id="cartTotal">₹0</span></span
+          >
+          <button
+            id="buyBtn"
+            class="bg-primary text-white px-4 py-2 rounded hover:bg-blue-700 font-semibold"
+          >
+            Buy
+          </button>
+        </div>
+      </div>
+    </div>
+    <!-- Payment Modal -->
+    <div
+      id="paymentModal"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 hidden"
+    >
+      <div class="bg-white rounded-lg shadow-lg w-full max-w-sm p-6 relative">
+        <button
+          id="closePaymentBtn"
+          class="absolute top-2 right-2 text-gray-400 hover:text-gray-600 text-2xl"
+        >
+          &times;
+        </button>
+        <h2 class="text-2xl font-bold mb-4 text-primary">Payment</h2>
+        <form id="paymentForm" class="space-y-4">
+          <div>
+            <label class="block text-gray-700">Choose Payment Method</label>
+            <select required class="w-full border rounded px-3 py-2">
+              <option value="">Select</option>
+              <option value="upi">UPI</option>
+              <option value="card">Credit/Debit Card</option>
+              <option value="netbanking">Netbanking</option>
+            </select>
+          </div>
+          <button
+            type="submit"
+            class="w-full bg-primary text-white py-2 rounded hover:bg-blue-700 font-semibold"
+          >
+            Pay
+          </button>
+        </form>
+        <div
+          id="paymentSuccess"
+          class="hidden mt-4 text-green-600 font-semibold text-center"
+        >
+          Payment Successful! Thank you for your purchase.
+        </div>
+      </div>
+    </div>
+    <script>
+      // Modal open/close logic
+      const bookBtn = document.getElementById("bookAppointmentBtn");
+      const modal = document.getElementById("appointmentModal");
+      const closeModalBtn = document.getElementById("closeModalBtn");
+      const appointmentForm = document.getElementById("appointmentForm");
+      const appointmentSuccess = document.getElementById("appointmentSuccess");
+
+      if (bookBtn && modal && closeModalBtn && appointmentForm) {
+        bookBtn.onclick = () => {
+          const user = JSON.parse(localStorage.getItem("loggedInUser"));
+          if (!user) {
+            window.location.href =
+              "login.html?redirect=history.html#book-appointment";
+          } else {
+            modal.classList.remove("hidden");
+          }
+        };
+        closeModalBtn.onclick = () => {
+          modal.classList.add("hidden");
+          appointmentSuccess.classList.add("hidden");
+          appointmentForm.reset();
+        };
+        window.onclick = (e) => {
+          if (e.target === modal) {
+            modal.classList.add("hidden");
+            appointmentSuccess.classList.add("hidden");
+            appointmentForm.reset();
+          }
+        };
+        appointmentForm.onsubmit = function (e) {
+          e.preventDefault();
+          // Simulate saving appointment (localStorage for now)
+          const formData = new FormData(appointmentForm);
+          const appointment = {
+            doctor: formData.get("doctor"),
+            date: formData.get("date"),
+            time: formData.get("time"),
+            reason: formData.get("reason"),
+            id: Date.now(),
+          };
+          let appointments = JSON.parse(
+            localStorage.getItem("appointments") || "[]"
+          );
+          appointments.push(appointment);
+          localStorage.setItem("appointments", JSON.stringify(appointments));
+          appointmentSuccess.classList.remove("hidden");
+          setTimeout(() => {
+            modal.classList.add("hidden");
+            appointmentSuccess.classList.add("hidden");
+            appointmentForm.reset();
+          }, 1500);
+        };
+      }
+      // --- Cart System (shared with medicines.html) ---
+      const medicines = [
+        { id: 1, name: "Paracetamol 500mg", price: 49 },
+        { id: 2, name: "Cetrizine 10mg", price: 69 },
+        { id: 3, name: "Amoxicillin 500mg", price: 129 },
+        { id: 4, name: "Ibuprofen 200mg", price: 79 },
+        { id: 5, name: "Loratadine 10mg", price: 99 },
+        { id: 6, name: "Omeprazole 20mg", price: 119 },
+        { id: 7, name: "Azithromycin 250mg", price: 149 },
+        { id: 8, name: "Metformin 500mg", price: 89 },
+        { id: 9, name: "Pantoprazole 40mg", price: 109 },
+        { id: 10, name: "Dolo 650mg", price: 59 },
+      ];
+      function getCart() {
+        return JSON.parse(localStorage.getItem("cart") || "{}");
+      }
+      function setCart(cart) {
+        localStorage.setItem("cart", JSON.stringify(cart));
+      }
+      function updateCartCount() {
+        const cart = getCart();
+        let count = 0;
+        for (let id in cart) count += cart[id];
+        document.getElementById("cartCount").textContent = count;
+      }
+      document.addEventListener("DOMContentLoaded", function () {
+        updateCartCount();
+      });
+      // --- Cart Modal ---
+      const cartBtn = document.getElementById("cartBtn");
+      const cartModal = document.getElementById("cartModal");
+      const closeCartBtn = document.getElementById("closeCartBtn");
+      const cartItemsDiv = document.getElementById("cartItems");
+      const cartTotalSpan = document.getElementById("cartTotal");
+      const buyBtn = document.getElementById("buyBtn");
+      function renderCartModal() {
+        const cart = getCart();
+        let total = 0;
+        let html = "";
+        for (let id in cart) {
+          const med = medicines.find((m) => m.id == id);
+          if (!med) continue;
+          total += med.price * cart[id];
+          html += `<div class='flex justify-between items-center mb-2'><div><span class='font-semibold'>${med.name}</span><br><span class='text-sm text-gray-500'>₹${med.price} x ${cart[id]}</span></div><div class='flex items-center'><button class='px-2 py-1 bg-gray-200 rounded-l' onclick='updateCartQty(${med.id},-1)'>-</button><span class='px-3'>${cart[id]}</span><button class='px-2 py-1 bg-gray-200 rounded-r' onclick='updateCartQty(${med.id},1)'>+</button></div></div>`;
+        }
+        cartItemsDiv.innerHTML =
+          html || '<div class="text-gray-500">Your cart is empty.</div>';
+        cartTotalSpan.textContent = `₹${total}`;
+        buyBtn.disabled = total === 0;
+      }
+      window.updateCartQty = function (id, delta) {
+        let c = getCart();
+        c[id] = (c[id] || 0) + delta;
+        if (c[id] <= 0) delete c[id];
+        setCart(c);
+        updateCartCount();
+        renderCartModal();
+      };
+      if (cartBtn && cartModal && closeCartBtn) {
+        cartBtn.onclick = () => {
+          renderCartModal();
+          cartModal.classList.remove("hidden");
+        };
+        closeCartBtn.onclick = () => {
+          cartModal.classList.add("hidden");
+        };
+        window.onclick = (e) => {
+          if (e.target === cartModal) cartModal.classList.add("hidden");
+        };
+      }
+      buyBtn.onclick = function () {
+        cartModal.classList.add("hidden");
+        document.getElementById("paymentModal").classList.remove("hidden");
+      };
+      // --- Payment Modal ---
+      const paymentModal = document.getElementById("paymentModal");
+      const closePaymentBtn = document.getElementById("closePaymentBtn");
+      const paymentForm = document.getElementById("paymentForm");
+      const paymentSuccess = document.getElementById("paymentSuccess");
+      if (closePaymentBtn && paymentModal) {
+        closePaymentBtn.onclick = () => {
+          paymentModal.classList.add("hidden");
+          paymentSuccess.classList.add("hidden");
+          paymentForm.reset();
+        };
+        window.onclick = (e) => {
+          if (e.target === paymentModal) paymentModal.classList.add("hidden");
+        };
+      }
+      paymentForm.onsubmit = function (e) {
+        e.preventDefault();
+        paymentSuccess.classList.remove("hidden");
+        setTimeout(() => {
+          paymentModal.classList.add("hidden");
+          paymentSuccess.classList.add("hidden");
+          paymentForm.reset();
+          setCart({});
+          updateCartCount();
+        }, 1500);
+      };
+
+      // --- Export Functionality ---
+      document.addEventListener("DOMContentLoaded", function () {
+        const downloadPdfBtn = document.getElementById("downloadPdfBtn");
+        const printHistoryBtn = document.getElementById("printHistoryBtn");
+        const shareDoctorBtn = document.getElementById("shareDoctorBtn");
+        const exportStatus = document.getElementById("exportStatus");
+        const statusMessage = document.getElementById("statusMessage");
+
+        // Show status message
+        function showStatus(message, type = "success") {
+          statusMessage.textContent = message;
+          exportStatus.className = `mt-4 text-center ${
+            type === "success"
+              ? "bg-green-100 text-green-800"
+              : "bg-red-100 text-red-800"
+          } px-4 py-2 rounded-lg`;
+          exportStatus.classList.remove("hidden");
+          setTimeout(() => {
+            exportStatus.classList.add("hidden");
+          }, 3000);
+        }
+
+        // Download PDF functionality
+        downloadPdfBtn.addEventListener("click", async function () {
+          try {
+            downloadPdfBtn.disabled = true;
+            downloadPdfBtn.innerHTML =
+              '<i class="fas fa-spinner fa-spin mr-2"></i>Generating PDF...';
+
+            // Get user info
+            const user = JSON.parse(
+              localStorage.getItem("loggedInUser") || "{}"
+            );
+
+            // Create PDF content
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            // Add header
+            doc.setFontSize(20);
+            doc.setTextColor(59, 130, 246); // Blue color
+            doc.text("MediMate - Medical History Report", 20, 20);
+
+            doc.setFontSize(12);
+            doc.setTextColor(0, 0, 0);
+            doc.text(
+              `Patient: ${user.name || user.email || "Unknown"}`,
+              20,
+              35
+            );
+            doc.text(
+              `Generated on: ${new Date().toLocaleDateString()}`,
+              20,
+              45
+            );
+
+            // Add diagnoses section
+            doc.setFontSize(16);
+            doc.setTextColor(59, 130, 246);
+            doc.text("Recent Diagnoses", 20, 65);
+
+            let yPosition = 80;
+
+            // Add diagnosis entries
+            const diagnoses = [
+              {
+                condition: "Common Cold",
+                symptoms: "Fever, headache, body aches",
+                date: "April 1, 2024",
+                status: "Completed",
+                treatment: [
+                  "Rest and hydration",
+                  "Paracetamol 500mg twice daily",
+                  "Vitamin C supplements",
+                ],
+              },
+              {
+                condition: "Allergic Rhinitis",
+                symptoms: "Sneezing, runny nose, itchy eyes",
+                date: "March 15, 2024",
+                status: "Completed",
+                treatment: [
+                  "Cetrizine 10mg once daily",
+                  "Avoid known allergens",
+                  "Saline nasal rinse",
+                ],
+              },
+              {
+                condition: "Migraine",
+                symptoms: "Severe headache, nausea, light sensitivity",
+                date: "February 28, 2024",
+                status: "In Progress",
+                treatment: [
+                  "Rest in dark, quiet room",
+                  "Ibuprofen 400mg as needed",
+                  "Identify and avoid triggers",
+                ],
+              },
+            ];
+
+            diagnoses.forEach((diagnosis, index) => {
+              if (yPosition > 250) {
+                doc.addPage();
+                yPosition = 20;
+              }
+
+              doc.setFontSize(14);
+              doc.setTextColor(0, 0, 0);
+              doc.setFont(undefined, "bold");
+              doc.text(`${index + 1}. ${diagnosis.condition}`, 20, yPosition);
+
+              doc.setFontSize(10);
+              doc.setFont(undefined, "normal");
+              doc.text(`Symptoms: ${diagnosis.symptoms}`, 25, yPosition + 8);
+              doc.text(`Date: ${diagnosis.date}`, 25, yPosition + 16);
+              doc.text(`Status: ${diagnosis.status}`, 25, yPosition + 24);
+
+              doc.text("Treatment:", 25, yPosition + 35);
+              diagnosis.treatment.forEach((treatment, i) => {
+                doc.text(`• ${treatment}`, 30, yPosition + 45 + i * 6);
+              });
+
+              yPosition += 70;
+            });
+
+            // Add medication history
+            if (yPosition > 200) {
+              doc.addPage();
+              yPosition = 20;
+            }
+
+            doc.setFontSize(16);
+            doc.setTextColor(59, 130, 246);
+            doc.text("Medication History", 20, yPosition);
+
+            yPosition += 20;
+
+            const medications = [
+              {
+                name: "Paracetamol",
+                dosage: "500mg, 2 tablets daily",
+                until: "Apr 10, 2024",
+              },
+              {
+                name: "Cetrizine",
+                dosage: "10mg, 1 tablet daily",
+                until: "Mar 22, 2024",
+              },
+              {
+                name: "Ibuprofen",
+                dosage: "200mg, as needed",
+                until: "Feb 28, 2024",
+              },
+            ];
+
+            medications.forEach((med, index) => {
+              doc.setFontSize(12);
+              doc.setTextColor(0, 0, 0);
+              doc.text(`${index + 1}. ${med.name}`, 25, yPosition);
+              doc.setFontSize(10);
+              doc.text(`   Dosage: ${med.dosage}`, 30, yPosition + 8);
+              doc.text(`   Until: ${med.until}`, 30, yPosition + 16);
+              yPosition += 30;
+            });
+
+            // Save PDF
+            const fileName = `medical_history_${user.name || "patient"}_${
+              new Date().toISOString().split("T")[0]
+            }.pdf`;
+            doc.save(fileName);
+
+            showStatus("PDF downloaded successfully!");
+          } catch (error) {
+            console.error("PDF generation error:", error);
+            showStatus("Error generating PDF. Please try again.", "error");
+          } finally {
+            downloadPdfBtn.disabled = false;
+            downloadPdfBtn.innerHTML =
+              '<i class="fas fa-download mr-2"></i>Download PDF';
+          }
+        });
+
+        // Print History functionality
+        printHistoryBtn.addEventListener("click", function () {
+          try {
+            printHistoryBtn.disabled = true;
+            printHistoryBtn.innerHTML =
+              '<i class="fas fa-spinner fa-spin mr-2"></i>Preparing...';
+
+            // Create print-friendly content
+            const printContent = document.createElement("div");
+            printContent.innerHTML = `
+        <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px;">
+          <div style="text-align: center; margin-bottom: 30px;">
+            <h1 style="color: #3b82f6; margin: 0;">MediMate - Medical History Report</h1>
+            <p style="color: #666; margin: 10px 0;">Generated on ${new Date().toLocaleDateString()}</p>
+          </div>
+          
+          <div style="margin-bottom: 30px;">
+            <h2 style="color: #3b82f6; border-bottom: 2px solid #3b82f6; padding-bottom: 5px;">Recent Diagnoses</h2>
+            
+            <div style="margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 5px;">
+              <h3 style="margin: 0 0 10px 0;">Common Cold</h3>
+              <p style="margin: 5px 0; color: #666;">Symptoms: Fever, headache, body aches</p>
+              <p style="margin: 5px 0; color: #666;">Date: April 1, 2024</p>
+              <p style="margin: 5px 0; color: #666;">Status: Completed</p>
+              <h4 style="margin: 15px 0 5px 0;">Treatment:</h4>
+              <ul style="margin: 5px 0; padding-left: 20px;">
+                <li>Rest and hydration</li>
+                <li>Paracetamol 500mg twice daily</li>
+                <li>Vitamin C supplements</li>
+              </ul>
+            </div>
+            
+            <div style="margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 5px;">
+              <h3 style="margin: 0 0 10px 0;">Allergic Rhinitis</h3>
+              <p style="margin: 5px 0; color: #666;">Symptoms: Sneezing, runny nose, itchy eyes</p>
+              <p style="margin: 5px 0; color: #666;">Date: March 15, 2024</p>
+              <p style="margin: 5px 0; color: #666;">Status: Completed</p>
+              <h4 style="margin: 15px 0 5px 0;">Treatment:</h4>
+              <ul style="margin: 5px 0; padding-left: 20px;">
+                <li>Cetrizine 10mg once daily</li>
+                <li>Avoid known allergens</li>
+                <li>Saline nasal rinse</li>
+              </ul>
+            </div>
+            
+            <div style="margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 5px;">
+              <h3 style="margin: 0 0 10px 0;">Migraine</h3>
+              <p style="margin: 5px 0; color: #666;">Symptoms: Severe headache, nausea, light sensitivity</p>
+              <p style="margin: 5px 0; color: #666;">Date: February 28, 2024</p>
+              <p style="margin: 5px 0; color: #666;">Status: In Progress</p>
+              <h4 style="margin: 15px 0 5px 0;">Treatment:</h4>
+              <ul style="margin: 5px 0; padding-left: 20px;">
+                <li>Rest in dark, quiet room</li>
+                <li>Ibuprofen 400mg as needed</li>
+                <li>Identify and avoid triggers</li>
+              </ul>
+            </div>
+          </div>
+          
+          <div>
+            <h2 style="color: #3b82f6; border-bottom: 2px solid #3b82f6; padding-bottom: 5px;">Medication History</h2>
+            <div style="margin-bottom: 10px;">
+              <strong>Paracetamol</strong> - 500mg, 2 tablets daily (Until Apr 10, 2024)
+            </div>
+            <div style="margin-bottom: 10px;">
+              <strong>Cetrizine</strong> - 10mg, 1 tablet daily (Until Mar 22, 2024)
+            </div>
+            <div style="margin-bottom: 10px;">
+              <strong>Ibuprofen</strong> - 200mg, as needed (Until Feb 28, 2024)
+            </div>
+          </div>
+        </div>
+      `;
+
+            // Create new window for printing
+            const printWindow = window.open("", "_blank");
+            printWindow.document.write(printContent.innerHTML);
+            printWindow.document.close();
+
+            // Wait for content to load then print
+            setTimeout(() => {
+              printWindow.print();
+              printWindow.close();
+              showStatus("Print dialog opened successfully!");
+            }, 500);
+          } catch (error) {
+            console.error("Print error:", error);
+            showStatus(
+              "Error opening print dialog. Please try again.",
+              "error"
+            );
+          } finally {
+            printHistoryBtn.disabled = false;
+            printHistoryBtn.innerHTML =
+              '<i class="fas fa-print mr-2"></i>Print History';
+          }
+        });
+
+        // Share with Doctor functionality
+        shareDoctorBtn.addEventListener("click", function () {
+          try {
+            shareDoctorBtn.disabled = true;
+            shareDoctorBtn.innerHTML =
+              '<i class="fas fa-spinner fa-spin mr-2"></i>Preparing...';
+
+            // Create share content
+            const user = JSON.parse(
+              localStorage.getItem("loggedInUser") || "{}"
+            );
+            const shareData = {
+              title: "Medical History Report",
+              text: `Medical history report for ${
+                user.name || user.email || "patient"
+              }`,
+              url: window.location.href,
+            };
+
+            // Try to use Web Share API if available
+            if (navigator.share) {
+              navigator
+                .share(shareData)
+                .then(() => {
+                  showStatus("Shared successfully!");
+                })
+                .catch((error) => {
+                  console.log("Share cancelled or failed:", error);
+                  // Fallback to email
+                  fallbackShare();
+                });
+            } else {
+              // Fallback for browsers that don't support Web Share API
+              fallbackShare();
+            }
+
+            function fallbackShare() {
+              const subject = encodeURIComponent(
+                "Medical History Report - MediMate"
+              );
+              const body = encodeURIComponent(`
+Dear Doctor,
+
+Please find attached my medical history report from MediMate.
+
+Patient: ${user.name || user.email || "Unknown"}
+Generated on: ${new Date().toLocaleDateString()}
+
+Recent Diagnoses:
+1. Common Cold (April 1, 2024) - Completed
+   Symptoms: Fever, headache, body aches
+   Treatment: Rest, Paracetamol, Vitamin C
+
+2. Allergic Rhinitis (March 15, 2024) - Completed
+   Symptoms: Sneezing, runny nose, itchy eyes
+   Treatment: Cetrizine, allergen avoidance, saline rinse
+
+3. Migraine (February 28, 2024) - In Progress
+   Symptoms: Severe headache, nausea, light sensitivity
+   Treatment: Rest, Ibuprofen, trigger identification
+
+Current Medications:
+- Paracetamol 500mg (until Apr 10, 2024)
+- Cetrizine 10mg (until Mar 22, 2024)
+- Ibuprofen 200mg (until Feb 28, 2024)
+
+Please review and provide any recommendations.
+
+Best regards,
+${user.name || "Patient"}
+        `);
+
+              const mailtoLink = `mailto:?subject=${subject}&body=${body}`;
+              window.open(mailtoLink);
+              showStatus("Email client opened with medical history!");
+            }
+          } catch (error) {
+            console.error("Share error:", error);
+            showStatus("Error sharing. Please try again.", "error");
+          } finally {
+            shareDoctorBtn.disabled = false;
+            shareDoctorBtn.innerHTML =
+              '<i class="fas fa-share-alt mr-2"></i>Share with Doctor';
+          }
+        });
+      });
+    </script>
+    <script>
+      (function () {
+        if (!window.chatbase || window.chatbase("getState") !== "initialized") {
+          window.chatbase = (...arguments) => {
+            if (!window.chatbase.q) {
+              window.chatbase.q = [];
+            }
+            window.chatbase.q.push(arguments);
+          };
+          window.chatbase = new Proxy(window.chatbase, {
+            get(target, prop) {
+              if (prop === "q") {
+                return target.q;
+              }
+              return (...args) => target(prop, ...args);
+            },
+          });
+        }
+        const onLoad = function () {
+          const script = document.createElement("script");
+          script.src = "https://www.chatbase.co/embed.min.js";
+          script.id = "hNuFFiWlP9H7jCBHkGVmp";
+          script.domain = "www.chatbase.co";
+          document.body.appendChild(script);
+        };
+        if (document.readyState === "complete") {
+          onLoad();
+        } else {
+          window.addEventListener("load", onLoad);
+        }
+      })();
+    </script>
+  </body>
+</html>

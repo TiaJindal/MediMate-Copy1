@@ -1,0 +1,2172 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Medicine Catalog - MediMate</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: "#3b82f6",
+              secondary: "#10b981",
+              accent: "#8b5cf6",
+              dark: "#1e293b",
+              light: "#f8fafc",
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
+
+      body {
+        font-family: "Poppins", sans-serif;
+        background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+      }
+
+      .card-hover {
+        transition: all 0.3s ease;
+      }
+
+      .card-hover:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
+          0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      }
+
+      .feature-icon {
+        width: 70px;
+        height: 70px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 20px;
+        margin-bottom: 20px;
+      }
+    </style>
+  </head>
+  <body class="min-h-screen">
+    <script>
+      if (!localStorage.getItem("loggedInUser")) {
+        window.location.href = "login.html?redirect=medicines.html";
+      }
+    </script>
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg sticky top-0 z-50">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-16">
+          <div class="flex items-center">
+            <div class="flex-shrink-0 flex items-center">
+              <i class="fas fa-heartbeat text-primary text-2xl mr-2"></i>
+              <span class="text-xl font-bold text-gray-800">MediMate</span>
+            </div>
+            <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
+              <a
+                href="index.html"
+                class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                >Home</a
+              >
+              <a href="chatbot.html" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">Chatbot</a>
+              <a
+                href="medicines.html"
+                class="border-primary text-gray-900 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                >Medicines</a
+              >
+              <a
+                href="history.html"
+                class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                >History</a
+              >
+              <a
+                href="profile.html"
+                class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                >Profile</a
+              >
+            </div>
+          </div>
+          <div class="hidden sm:ml-6 sm:flex sm:items-center space-x-4">
+            <button
+              id="bookAppointmentBtn"
+              class="bg-secondary text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition inline-flex items-center"
+            >
+              <i class="fas fa-calendar-check mr-2"></i>Book Appointment
+            </button>
+            <button
+              id="cartBtn"
+              class="relative text-gray-700 hover:text-primary focus:outline-none"
+            >
+              <i class="fas fa-shopping-cart text-2xl"></i>
+              <span
+                id="cartCount"
+                class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full px-1.5"
+                >0</span
+              >
+            </button>
+            <div id="navbarUser" class="flex items-center space-x-2"></div>
+          </div>
+        </div>
+      </div>
+    </nav>
+    <script>
+      // Show user name and icon in navbar
+      const navbarUser = document.getElementById("navbarUser");
+      const user = JSON.parse(localStorage.getItem("loggedInUser"));
+      if (user && navbarUser) {
+        navbarUser.innerHTML = `<i class='fas fa-user-circle text-primary text-2xl'></i><span class='font-medium text-gray-800'>${
+          user.name || user.email
+        }</span> <button id='logoutBtn' class='ml-2 px-2 py-1 bg-red-500 text-white rounded hover:bg-red-700 text-xs'>Logout</button>`;
+        document.getElementById("logoutBtn").onclick = function () {
+          localStorage.removeItem("loggedInUser");
+          window.location.href = "index.html";
+        };
+      } else if (navbarUser) {
+        navbarUser.innerHTML = `<a href='login.html' class='bg-primary text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition inline-flex items-center'>Sign In</a>`;
+      }
+    </script>
+
+    <!-- Medicine Section -->
+    <section class="py-16">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-12">
+          <h1 class="text-3xl font-extrabold text-gray-900 sm:text-4xl">
+            Medicine Catalog
+          </h1>
+          <p class="mt-3 text-xl text-gray-500">
+            Browse our selection of common medications with detailed information
+            and secure purchasing.
+          </p>
+          <div id="results-count" class="mt-4 text-sm text-gray-600">
+            Showing all 30 medicines
+          </div>
+        </div>
+
+        <div class="mb-8">
+          <div class="relative max-w-xl mx-auto mb-4">
+            <input
+              type="text"
+              id="search-medicines"
+              placeholder="Search medicines..."
+              class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+            />
+            <div
+              class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+            >
+              <i class="fas fa-search text-gray-400"></i>
+            </div>
+            <button
+              id="clear-search"
+              class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 hidden"
+              style="display: none"
+            >
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+
+          <!-- Category Filters -->
+          <div class="flex flex-wrap justify-center gap-2 mb-4">
+            <button
+              class="category-filter bg-primary text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition"
+              data-category="all"
+            >
+              All Medicines
+            </button>
+            <button
+              class="category-filter bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-300 transition"
+              data-category="pain"
+            >
+              Pain Relief
+            </button>
+            <button
+              class="category-filter bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-300 transition"
+              data-category="allergy"
+            >
+              Allergy
+            </button>
+            <button
+              class="category-filter bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-300 transition"
+              data-category="antibiotic"
+            >
+              Antibiotics
+            </button>
+            <button
+              class="category-filter bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-300 transition"
+              data-category="digestive"
+            >
+              Digestive
+            </button>
+            <button
+              class="category-filter bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-300 transition"
+              data-category="diabetes"
+            >
+              Diabetes
+            </button>
+          </div>
+        </div>
+
+        <div class="mt-12">
+          <div class="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+            <!-- Medicine 1 -->
+            <div
+              class="card-hover bg-white rounded-xl shadow-md overflow-hidden"
+              data-name="Paracetamol 500mg"
+              data-desc="Pain reliever and fever reducer"
+              data-category="pain"
+            >
+              <div
+                class="h-48 bg-gradient-to-r from-blue-400 to-indigo-500 flex items-center justify-center"
+              >
+                <i class="fas fa-capsules text-white text-6xl"></i>
+              </div>
+              <div class="p-6">
+                <div class="flex justify-between items-start">
+                  <div>
+                    <h3 class="text-xl font-bold text-gray-900">
+                      Paracetamol 500mg
+                    </h3>
+                    <p class="text-gray-600 mt-1">
+                      Pain reliever and fever reducer
+                    </p>
+                  </div>
+                  <span
+                    class="bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-0.5 rounded"
+                    >OTC</span
+                  >
+                </div>
+                <div class="mt-4 flex items-center justify-between">
+                  <span class="text-2xl font-bold text-gray-900">₹49</span>
+                  <button
+                    class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm"
+                  >
+                    Add to Cart
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Medicine 2 -->
+            <div
+              class="card-hover bg-white rounded-xl shadow-md overflow-hidden"
+              data-name="Cetrizine 10mg"
+              data-desc="Antihistamine for allergies"
+              data-category="allergy"
+            >
+              <div
+                class="h-48 bg-gradient-to-r from-green-400 to-emerald-500 flex items-center justify-center"
+              >
+                <i
+                  class="fas fa-prescription-bottle-alt text-white text-6xl"
+                ></i>
+              </div>
+              <div class="p-6">
+                <div class="flex justify-between items-start">
+                  <div>
+                    <h3 class="text-xl font-bold text-gray-900">
+                      Cetrizine 10mg
+                    </h3>
+                    <p class="text-gray-600 mt-1">
+                      Antihistamine for allergies
+                    </p>
+                  </div>
+                  <span
+                    class="bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-0.5 rounded"
+                    >OTC</span
+                  >
+                </div>
+                <div class="mt-4 flex items-center justify-between">
+                  <span class="text-2xl font-bold text-gray-900">₹69</span>
+                  <button
+                    class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm"
+                  >
+                    Add to Cart
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Medicine 3 -->
+            <div
+              class="card-hover bg-white rounded-xl shadow-md overflow-hidden"
+              data-name="Amoxicillin 500mg"
+              data-desc="Antibiotic for bacterial infections"
+              data-category="antibiotic"
+            >
+              <div
+                class="h-48 bg-gradient-to-r from-purple-400 to-pink-500 flex items-center justify-center"
+              >
+                <i class="fas fa-tablets text-white text-6xl"></i>
+              </div>
+              <div class="p-6">
+                <div class="flex justify-between items-start">
+                  <div>
+                    <h3 class="text-xl font-bold text-gray-900">
+                      Amoxicillin 500mg
+                    </h3>
+                    <p class="text-gray-600 mt-1">
+                      Antibiotic for bacterial infections
+                    </p>
+                  </div>
+                  <span
+                    class="bg-red-100 text-red-800 text-xs font-semibold px-2.5 py-0.5 rounded"
+                    >Rx</span
+                  >
+                </div>
+                <div class="mt-4 flex items-center justify-between">
+                  <span class="text-2xl font-bold text-gray-900">₹129</span>
+                  <button
+                    class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm"
+                  >
+                    Add to Cart
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Medicine 4 -->
+            <div
+              class="card-hover bg-white rounded-xl shadow-md overflow-hidden"
+              data-name="Ibuprofen 200mg"
+              data-desc="NSAID for pain and inflammation"
+              data-category="pain"
+            >
+              <div
+                class="h-48 bg-gradient-to-r from-yellow-400 to-orange-500 flex items-center justify-center"
+              >
+                <i class="fas fa-prescription-bottle text-white text-6xl"></i>
+              </div>
+              <div class="p-6">
+                <div class="flex justify-between items-start">
+                  <div>
+                    <h3 class="text-xl font-bold text-gray-900">
+                      Ibuprofen 200mg
+                    </h3>
+                    <p class="text-gray-600 mt-1">
+                      NSAID for pain and inflammation
+                    </p>
+                  </div>
+                  <span
+                    class="bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-0.5 rounded"
+                    >OTC</span
+                  >
+                </div>
+                <div class="mt-4 flex items-center justify-between">
+                  <span class="text-2xl font-bold text-gray-900">₹79</span>
+                  <button
+                    class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm"
+                  >
+                    Add to Cart
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Medicine 5 -->
+            <div
+              class="card-hover bg-white rounded-xl shadow-md overflow-hidden"
+              data-name="Loratadine 10mg"
+              data-desc="Antihistamine for allergies"
+              data-category="allergy"
+            >
+              <div
+                class="h-48 bg-gradient-to-r from-red-400 to-pink-500 flex items-center justify-center"
+              >
+                <i class="fas fa-capsules text-white text-6xl"></i>
+              </div>
+              <div class="p-6">
+                <div class="flex justify-between items-start">
+                  <div>
+                    <h3 class="text-xl font-bold text-gray-900">
+                      Loratadine 10mg
+                    </h3>
+                    <p class="text-gray-600 mt-1">
+                      Antihistamine for allergies
+                    </p>
+                  </div>
+                  <span
+                    class="bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-0.5 rounded"
+                    >OTC</span
+                  >
+                </div>
+                <div class="mt-4 flex items-center justify-between">
+                  <span class="text-2xl font-bold text-gray-900">₹99</span>
+                  <button
+                    class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm"
+                  >
+                    Add to Cart
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Medicine 6 -->
+            <div
+              class="card-hover bg-white rounded-xl shadow-md overflow-hidden"
+              data-name="Omeprazole 20mg"
+              data-desc="Proton pump inhibitor for acid reflux"
+              data-category="digestive"
+            >
+              <div
+                class="h-48 bg-gradient-to-r from-indigo-400 to-purple-500 flex items-center justify-center"
+              >
+                <i class="fas fa-tablets text-white text-6xl"></i>
+              </div>
+              <div class="p-6">
+                <div class="flex justify-between items-start">
+                  <div>
+                    <h3 class="text-xl font-bold text-gray-900">
+                      Omeprazole 20mg
+                    </h3>
+                    <p class="text-gray-600 mt-1">
+                      Proton pump inhibitor for acid reflux
+                    </p>
+                  </div>
+                  <span
+                    class="bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-0.5 rounded"
+                    >OTC</span
+                  >
+                </div>
+                <div class="mt-4 flex items-center justify-between">
+                  <span class="text-2xl font-bold text-gray-900">₹119</span>
+                  <button
+                    class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm"
+                  >
+                    Add to Cart
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Medicine 7 -->
+            <div
+              class="card-hover bg-white rounded-xl shadow-md overflow-hidden"
+              data-name="Azithromycin 250mg"
+              data-desc="Antibiotic for infections"
+              data-category="antibiotic"
+            >
+              <div
+                class="h-48 bg-gradient-to-r from-pink-400 to-red-500 flex items-center justify-center"
+              >
+                <i class="fas fa-capsules text-white text-6xl"></i>
+              </div>
+              <div class="p-6">
+                <div class="flex justify-between items-start">
+                  <div>
+                    <h3 class="text-xl font-bold text-gray-900">
+                      Azithromycin 250mg
+                    </h3>
+                    <p class="text-gray-600 mt-1">Antibiotic for infections</p>
+                  </div>
+                  <span
+                    class="bg-red-100 text-red-800 text-xs font-semibold px-2.5 py-0.5 rounded"
+                    >Rx</span
+                  >
+                </div>
+                <div class="mt-4 flex items-center justify-between">
+                  <span class="text-2xl font-bold text-gray-900">₹149</span>
+                  <button
+                    class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm"
+                  >
+                    Add to Cart
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Medicine 8 -->
+            <div
+              class="card-hover bg-white rounded-xl shadow-md overflow-hidden"
+              data-name="Metformin 500mg"
+              data-desc="Diabetes management"
+              data-category="diabetes"
+            >
+              <div
+                class="h-48 bg-gradient-to-r from-green-400 to-blue-500 flex items-center justify-center"
+              >
+                <i class="fas fa-tablets text-white text-6xl"></i>
+              </div>
+              <div class="p-6">
+                <div class="flex justify-between items-start">
+                  <div>
+                    <h3 class="text-xl font-bold text-gray-900">
+                      Metformin 500mg
+                    </h3>
+                    <p class="text-gray-600 mt-1">Diabetes management</p>
+                  </div>
+                  <span
+                    class="bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-0.5 rounded"
+                    >OTC</span
+                  >
+                </div>
+                <div class="mt-4 flex items-center justify-between">
+                  <span class="text-2xl font-bold text-gray-900">₹89</span>
+                  <button
+                    class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm"
+                  >
+                    Add to Cart
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Medicine 9 -->
+            <div
+              class="card-hover bg-white rounded-xl shadow-md overflow-hidden"
+              data-name="Pantoprazole 40mg"
+              data-desc="Acidity and ulcer treatment"
+              data-category="digestive"
+            >
+              <div
+                class="h-48 bg-gradient-to-r from-yellow-400 to-green-500 flex items-center justify-center"
+              >
+                <i class="fas fa-capsules text-white text-6xl"></i>
+              </div>
+              <div class="p-6">
+                <div class="flex justify-between items-start">
+                  <div>
+                    <h3 class="text-xl font-bold text-gray-900">
+                      Pantoprazole 40mg
+                    </h3>
+                    <p class="text-gray-600 mt-1">
+                      Acidity and ulcer treatment
+                    </p>
+                  </div>
+                  <span
+                    class="bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-0.5 rounded"
+                    >OTC</span
+                  >
+                </div>
+                <div class="mt-4 flex items-center justify-between">
+                  <span class="text-2xl font-bold text-gray-900">₹109</span>
+                  <button
+                    class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm"
+                  >
+                    Add to Cart
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Medicine 10 -->
+            <div
+              class="card-hover bg-white rounded-xl shadow-md overflow-hidden"
+              data-name="Dolo 650mg"
+              data-desc="Pain and fever relief"
+              data-category="pain"
+            >
+              <div
+                class="h-48 bg-gradient-to-r from-blue-400 to-green-500 flex items-center justify-center"
+              >
+                <i class="fas fa-tablets text-white text-6xl"></i>
+              </div>
+              <div class="p-6">
+                <div class="flex justify-between items-start">
+                  <div>
+                    <h3 class="text-xl font-bold text-gray-900">Dolo 650mg</h3>
+                    <p class="text-gray-600 mt-1">Pain and fever relief</p>
+                  </div>
+                  <span
+                    class="bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-0.5 rounded"
+                    >OTC</span
+                  >
+                </div>
+                <div class="mt-4 flex items-center justify-between">
+                  <span class="text-2xl font-bold text-gray-900">₹59</span>
+                  <button
+                    class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm"
+                  >
+                    Add to Cart
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Additional Pain Relief Medicines -->
+            <div
+              class="card-hover bg-white rounded-xl shadow-md overflow-hidden"
+              data-name="Aspirin 100mg"
+              data-desc="Blood thinner and pain reliever"
+              data-category="pain"
+            >
+              <div
+                class="h-48 bg-gradient-to-r from-red-400 to-pink-500 flex items-center justify-center"
+              >
+                <i class="fas fa-pills text-white text-6xl"></i>
+              </div>
+              <div class="p-6">
+                <div class="flex justify-between items-start">
+                  <div>
+                    <h3 class="text-xl font-bold text-gray-900">
+                      Aspirin 100mg
+                    </h3>
+                    <p class="text-gray-600 mt-1">
+                      Blood thinner and pain reliever
+                    </p>
+                  </div>
+                  <span
+                    class="bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-0.5 rounded"
+                    >OTC</span
+                  >
+                </div>
+                <div class="mt-4 flex items-center justify-between">
+                  <span class="text-2xl font-bold text-gray-900">₹45</span>
+                  <button
+                    class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm"
+                  >
+                    Add to Cart
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div
+              class="card-hover bg-white rounded-xl shadow-md overflow-hidden"
+              data-name="Diclofenac 50mg"
+              data-desc="NSAID for severe pain and inflammation"
+              data-category="pain"
+            >
+              <div
+                class="h-48 bg-gradient-to-r from-orange-400 to-red-500 flex items-center justify-center"
+              >
+                <i class="fas fa-capsules text-white text-6xl"></i>
+              </div>
+              <div class="p-6">
+                <div class="flex justify-between items-start">
+                  <div>
+                    <h3 class="text-xl font-bold text-gray-900">
+                      Diclofenac 50mg
+                    </h3>
+                    <p class="text-gray-600 mt-1">
+                      NSAID for severe pain and inflammation
+                    </p>
+                  </div>
+                  <span
+                    class="bg-red-100 text-red-800 text-xs font-semibold px-2.5 py-0.5 rounded"
+                    >Rx</span
+                  >
+                </div>
+                <div class="mt-4 flex items-center justify-between">
+                  <span class="text-2xl font-bold text-gray-900">₹85</span>
+                  <button
+                    class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm"
+                  >
+                    Add to Cart
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div
+              class="card-hover bg-white rounded-xl shadow-md overflow-hidden"
+              data-name="Tramadol 50mg"
+              data-desc="Opioid pain medication"
+              data-category="pain"
+            >
+              <div
+                class="h-48 bg-gradient-to-r from-purple-400 to-indigo-500 flex items-center justify-center"
+              >
+                <i class="fas fa-tablets text-white text-6xl"></i>
+              </div>
+              <div class="p-6">
+                <div class="flex justify-between items-start">
+                  <div>
+                    <h3 class="text-xl font-bold text-gray-900">
+                      Tramadol 50mg
+                    </h3>
+                    <p class="text-gray-600 mt-1">Opioid pain medication</p>
+                  </div>
+                  <span
+                    class="bg-red-100 text-red-800 text-xs font-semibold px-2.5 py-0.5 rounded"
+                    >Rx</span
+                  >
+                </div>
+                <div class="mt-4 flex items-center justify-between">
+                  <span class="text-2xl font-bold text-gray-900">₹120</span>
+                  <button
+                    class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm"
+                  >
+                    Add to Cart
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div
+              class="card-hover bg-white rounded-xl shadow-md overflow-hidden"
+              data-name="Naproxen 500mg"
+              data-desc="NSAID for arthritis and pain"
+              data-category="pain"
+            >
+              <div
+                class="h-48 bg-gradient-to-r from-teal-400 to-blue-500 flex items-center justify-center"
+              >
+                <i class="fas fa-prescription-bottle text-white text-6xl"></i>
+              </div>
+              <div class="p-6">
+                <div class="flex justify-between items-start">
+                  <div>
+                    <h3 class="text-xl font-bold text-gray-900">
+                      Naproxen 500mg
+                    </h3>
+                    <p class="text-gray-600 mt-1">
+                      NSAID for arthritis and pain
+                    </p>
+                  </div>
+                  <span
+                    class="bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-0.5 rounded"
+                    >OTC</span
+                  >
+                </div>
+                <div class="mt-4 flex items-center justify-between">
+                  <span class="text-2xl font-bold text-gray-900">₹95</span>
+                  <button
+                    class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm"
+                  >
+                    Add to Cart
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Additional Allergy Medicines -->
+            <div
+              class="card-hover bg-white rounded-xl shadow-md overflow-hidden"
+              data-name="Fexofenadine 120mg"
+              data-desc="Non-drowsy antihistamine"
+              data-category="allergy"
+            >
+              <div
+                class="h-48 bg-gradient-to-r from-blue-400 to-cyan-500 flex items-center justify-center"
+              >
+                <i class="fas fa-capsules text-white text-6xl"></i>
+              </div>
+              <div class="p-6">
+                <div class="flex justify-between items-start">
+                  <div>
+                    <h3 class="text-xl font-bold text-gray-900">
+                      Fexofenadine 120mg
+                    </h3>
+                    <p class="text-gray-600 mt-1">Non-drowsy antihistamine</p>
+                  </div>
+                  <span
+                    class="bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-0.5 rounded"
+                    >OTC</span
+                  >
+                </div>
+                <div class="mt-4 flex items-center justify-between">
+                  <span class="text-2xl font-bold text-gray-900">₹110</span>
+                  <button
+                    class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm"
+                  >
+                    Add to Cart
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div
+              class="card-hover bg-white rounded-xl shadow-md overflow-hidden"
+              data-name="Montelukast 10mg"
+              data-desc="Leukotriene receptor antagonist"
+              data-category="allergy"
+            >
+              <div
+                class="h-48 bg-gradient-to-r from-green-400 to-teal-500 flex items-center justify-center"
+              >
+                <i class="fas fa-tablets text-white text-6xl"></i>
+              </div>
+              <div class="p-6">
+                <div class="flex justify-between items-start">
+                  <div>
+                    <h3 class="text-xl font-bold text-gray-900">
+                      Montelukast 10mg
+                    </h3>
+                    <p class="text-gray-600 mt-1">
+                      Leukotriene receptor antagonist
+                    </p>
+                  </div>
+                  <span
+                    class="bg-red-100 text-red-800 text-xs font-semibold px-2.5 py-0.5 rounded"
+                    >Rx</span
+                  >
+                </div>
+                <div class="mt-4 flex items-center justify-between">
+                  <span class="text-2xl font-bold text-gray-900">₹140</span>
+                  <button
+                    class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm"
+                  >
+                    Add to Cart
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div
+              class="card-hover bg-white rounded-xl shadow-md overflow-hidden"
+              data-name="Diphenhydramine 25mg"
+              data-desc="Sedating antihistamine"
+              data-category="allergy"
+            >
+              <div
+                class="h-48 bg-gradient-to-r from-indigo-400 to-purple-500 flex items-center justify-center"
+              >
+                <i
+                  class="fas fa-prescription-bottle-alt text-white text-6xl"
+                ></i>
+              </div>
+              <div class="p-6">
+                <div class="flex justify-between items-start">
+                  <div>
+                    <h3 class="text-xl font-bold text-gray-900">
+                      Diphenhydramine 25mg
+                    </h3>
+                    <p class="text-gray-600 mt-1">Sedating antihistamine</p>
+                  </div>
+                  <span
+                    class="bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-0.5 rounded"
+                    >OTC</span
+                  >
+                </div>
+                <div class="mt-4 flex items-center justify-between">
+                  <span class="text-2xl font-bold text-gray-900">₹55</span>
+                  <button
+                    class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm"
+                  >
+                    Add to Cart
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div
+              class="card-hover bg-white rounded-xl shadow-md overflow-hidden"
+              data-name="Levocetrizine 5mg"
+              data-desc="Second generation antihistamine"
+              data-category="allergy"
+            >
+              <div
+                class="h-48 bg-gradient-to-r from-pink-400 to-rose-500 flex items-center justify-center"
+              >
+                <i class="fas fa-capsules text-white text-6xl"></i>
+              </div>
+              <div class="p-6">
+                <div class="flex justify-between items-start">
+                  <div>
+                    <h3 class="text-xl font-bold text-gray-900">
+                      Levocetrizine 5mg
+                    </h3>
+                    <p class="text-gray-600 mt-1">
+                      Second generation antihistamine
+                    </p>
+                  </div>
+                  <span
+                    class="bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-0.5 rounded"
+                    >OTC</span
+                  >
+                </div>
+                <div class="mt-4 flex items-center justify-between">
+                  <span class="text-2xl font-bold text-gray-900">₹75</span>
+                  <button
+                    class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm"
+                  >
+                    Add to Cart
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Additional Antibiotic Medicines -->
+            <div
+              class="card-hover bg-white rounded-xl shadow-md overflow-hidden"
+              data-name="Ciprofloxacin 500mg"
+              data-desc="Broad spectrum antibiotic"
+              data-category="antibiotic"
+            >
+              <div
+                class="h-48 bg-gradient-to-r from-cyan-400 to-blue-500 flex items-center justify-center"
+              >
+                <i class="fas fa-tablets text-white text-6xl"></i>
+              </div>
+              <div class="p-6">
+                <div class="flex justify-between items-start">
+                  <div>
+                    <h3 class="text-xl font-bold text-gray-900">
+                      Ciprofloxacin 500mg
+                    </h3>
+                    <p class="text-gray-600 mt-1">Broad spectrum antibiotic</p>
+                  </div>
+                  <span
+                    class="bg-red-100 text-red-800 text-xs font-semibold px-2.5 py-0.5 rounded"
+                    >Rx</span
+                  >
+                </div>
+                <div class="mt-4 flex items-center justify-between">
+                  <span class="text-2xl font-bold text-gray-900">₹160</span>
+                  <button
+                    class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm"
+                  >
+                    Add to Cart
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div
+              class="card-hover bg-white rounded-xl shadow-md overflow-hidden"
+              data-name="Doxycycline 100mg"
+              data-desc="Tetracycline antibiotic"
+              data-category="antibiotic"
+            >
+              <div
+                class="h-48 bg-gradient-to-r from-yellow-400 to-orange-500 flex items-center justify-center"
+              >
+                <i class="fas fa-capsules text-white text-6xl"></i>
+              </div>
+              <div class="p-6">
+                <div class="flex justify-between items-start">
+                  <div>
+                    <h3 class="text-xl font-bold text-gray-900">
+                      Doxycycline 100mg
+                    </h3>
+                    <p class="text-gray-600 mt-1">Tetracycline antibiotic</p>
+                  </div>
+                  <span
+                    class="bg-red-100 text-red-800 text-xs font-semibold px-2.5 py-0.5 rounded"
+                    >Rx</span
+                  >
+                </div>
+                <div class="mt-4 flex items-center justify-between">
+                  <span class="text-2xl font-bold text-gray-900">₹135</span>
+                  <button
+                    class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm"
+                  >
+                    Add to Cart
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div
+              class="card-hover bg-white rounded-xl shadow-md overflow-hidden"
+              data-name="Clarithromycin 500mg"
+              data-desc="Macrolide antibiotic"
+              data-category="antibiotic"
+            >
+              <div
+                class="h-48 bg-gradient-to-r from-emerald-400 to-green-500 flex items-center justify-center"
+              >
+                <i class="fas fa-prescription-bottle text-white text-6xl"></i>
+              </div>
+              <div class="p-6">
+                <div class="flex justify-between items-start">
+                  <div>
+                    <h3 class="text-xl font-bold text-gray-900">
+                      Clarithromycin 500mg
+                    </h3>
+                    <p class="text-gray-600 mt-1">Macrolide antibiotic</p>
+                  </div>
+                  <span
+                    class="bg-red-100 text-red-800 text-xs font-semibold px-2.5 py-0.5 rounded"
+                    >Rx</span
+                  >
+                </div>
+                <div class="mt-4 flex items-center justify-between">
+                  <span class="text-2xl font-bold text-gray-900">₹175</span>
+                  <button
+                    class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm"
+                  >
+                    Add to Cart
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div
+              class="card-hover bg-white rounded-xl shadow-md overflow-hidden"
+              data-name="Cephalexin 500mg"
+              data-desc="Cephalosporin antibiotic"
+              data-category="antibiotic"
+            >
+              <div
+                class="h-48 bg-gradient-to-r from-violet-400 to-purple-500 flex items-center justify-center"
+              >
+                <i class="fas fa-tablets text-white text-6xl"></i>
+              </div>
+              <div class="p-6">
+                <div class="flex justify-between items-start">
+                  <div>
+                    <h3 class="text-xl font-bold text-gray-900">
+                      Cephalexin 500mg
+                    </h3>
+                    <p class="text-gray-600 mt-1">Cephalosporin antibiotic</p>
+                  </div>
+                  <span
+                    class="bg-red-100 text-red-800 text-xs font-semibold px-2.5 py-0.5 rounded"
+                    >Rx</span
+                  >
+                </div>
+                <div class="mt-4 flex items-center justify-between">
+                  <span class="text-2xl font-bold text-gray-900">₹145</span>
+                  <button
+                    class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm"
+                  >
+                    Add to Cart
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Additional Digestive Medicines -->
+            <div
+              class="card-hover bg-white rounded-xl shadow-md overflow-hidden"
+              data-name="Ranitidine 150mg"
+              data-desc="H2 blocker for acid reflux"
+              data-category="digestive"
+            >
+              <div
+                class="h-48 bg-gradient-to-r from-sky-400 to-blue-500 flex items-center justify-center"
+              >
+                <i class="fas fa-capsules text-white text-6xl"></i>
+              </div>
+              <div class="p-6">
+                <div class="flex justify-between items-start">
+                  <div>
+                    <h3 class="text-xl font-bold text-gray-900">
+                      Ranitidine 150mg
+                    </h3>
+                    <p class="text-gray-600 mt-1">H2 blocker for acid reflux</p>
+                  </div>
+                  <span
+                    class="bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-0.5 rounded"
+                    >OTC</span
+                  >
+                </div>
+                <div class="mt-4 flex items-center justify-between">
+                  <span class="text-2xl font-bold text-gray-900">₹65</span>
+                  <button
+                    class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm"
+                  >
+                    Add to Cart
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div
+              class="card-hover bg-white rounded-xl shadow-md overflow-hidden"
+              data-name="Domperidone 10mg"
+              data-desc="Anti-nausea medication"
+              data-category="digestive"
+            >
+              <div
+                class="h-48 bg-gradient-to-r from-amber-400 to-yellow-500 flex items-center justify-center"
+              >
+                <i
+                  class="fas fa-prescription-bottle-alt text-white text-6xl"
+                ></i>
+              </div>
+              <div class="p-6">
+                <div class="flex justify-between items-start">
+                  <div>
+                    <h3 class="text-xl font-bold text-gray-900">
+                      Domperidone 10mg
+                    </h3>
+                    <p class="text-gray-600 mt-1">Anti-nausea medication</p>
+                  </div>
+                  <span
+                    class="bg-red-100 text-red-800 text-xs font-semibold px-2.5 py-0.5 rounded"
+                    >Rx</span
+                  >
+                </div>
+                <div class="mt-4 flex items-center justify-between">
+                  <span class="text-2xl font-bold text-gray-900">₹85</span>
+                  <button
+                    class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm"
+                  >
+                    Add to Cart
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div
+              class="card-hover bg-white rounded-xl shadow-md overflow-hidden"
+              data-name="Lactulose 10ml"
+              data-desc="Laxative for constipation"
+              data-category="digestive"
+            >
+              <div
+                class="h-48 bg-gradient-to-r from-lime-400 to-green-500 flex items-center justify-center"
+              >
+                <i class="fas fa-prescription-bottle text-white text-6xl"></i>
+              </div>
+              <div class="p-6">
+                <div class="flex justify-between items-start">
+                  <div>
+                    <h3 class="text-xl font-bold text-gray-900">
+                      Lactulose 10ml
+                    </h3>
+                    <p class="text-gray-600 mt-1">Laxative for constipation</p>
+                  </div>
+                  <span
+                    class="bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-0.5 rounded"
+                    >OTC</span
+                  >
+                </div>
+                <div class="mt-4 flex items-center justify-between">
+                  <span class="text-2xl font-bold text-gray-900">₹95</span>
+                  <button
+                    class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm"
+                  >
+                    Add to Cart
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div
+              class="card-hover bg-white rounded-xl shadow-md overflow-hidden"
+              data-name="Bismuth Subsalicylate"
+              data-desc="Anti-diarrheal medication"
+              data-category="digestive"
+            >
+              <div
+                class="h-48 bg-gradient-to-r from-rose-400 to-pink-500 flex items-center justify-center"
+              >
+                <i class="fas fa-capsules text-white text-6xl"></i>
+              </div>
+              <div class="p-6">
+                <div class="flex justify-between items-start">
+                  <div>
+                    <h3 class="text-xl font-bold text-gray-900">
+                      Bismuth Subsalicylate
+                    </h3>
+                    <p class="text-gray-600 mt-1">Anti-diarrheal medication</p>
+                  </div>
+                  <span
+                    class="bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-0.5 rounded"
+                    >OTC</span
+                  >
+                </div>
+                <div class="mt-4 flex items-center justify-between">
+                  <span class="text-2xl font-bold text-gray-900">₹75</span>
+                  <button
+                    class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm"
+                  >
+                    Add to Cart
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Additional Diabetes Medicines -->
+            <div
+              class="card-hover bg-white rounded-xl shadow-md overflow-hidden"
+              data-name="Glimepiride 1mg"
+              data-desc="Sulfonylurea for diabetes"
+              data-category="diabetes"
+            >
+              <div
+                class="h-48 bg-gradient-to-r from-indigo-400 to-blue-500 flex items-center justify-center"
+              >
+                <i class="fas fa-tablets text-white text-6xl"></i>
+              </div>
+              <div class="p-6">
+                <div class="flex justify-between items-start">
+                  <div>
+                    <h3 class="text-xl font-bold text-gray-900">
+                      Glimepiride 1mg
+                    </h3>
+                    <p class="text-gray-600 mt-1">Sulfonylurea for diabetes</p>
+                  </div>
+                  <span
+                    class="bg-red-100 text-red-800 text-xs font-semibold px-2.5 py-0.5 rounded"
+                    >Rx</span
+                  >
+                </div>
+                <div class="mt-4 flex items-center justify-between">
+                  <span class="text-2xl font-bold text-gray-900">₹125</span>
+                  <button
+                    class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm"
+                  >
+                    Add to Cart
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div
+              class="card-hover bg-white rounded-xl shadow-md overflow-hidden"
+              data-name="Sitagliptin 100mg"
+              data-desc="DPP-4 inhibitor for diabetes"
+              data-category="diabetes"
+            >
+              <div
+                class="h-48 bg-gradient-to-r from-teal-400 to-cyan-500 flex items-center justify-center"
+              >
+                <i class="fas fa-capsules text-white text-6xl"></i>
+              </div>
+              <div class="p-6">
+                <div class="flex justify-between items-start">
+                  <div>
+                    <h3 class="text-xl font-bold text-gray-900">
+                      Sitagliptin 100mg
+                    </h3>
+                    <p class="text-gray-600 mt-1">
+                      DPP-4 inhibitor for diabetes
+                    </p>
+                  </div>
+                  <span
+                    class="bg-red-100 text-red-800 text-xs font-semibold px-2.5 py-0.5 rounded"
+                    >Rx</span
+                  >
+                </div>
+                <div class="mt-4 flex items-center justify-between">
+                  <span class="text-2xl font-bold text-gray-900">₹180</span>
+                  <button
+                    class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm"
+                  >
+                    Add to Cart
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div
+              class="card-hover bg-white rounded-xl shadow-md overflow-hidden"
+              data-name="Pioglitazone 15mg"
+              data-desc="Thiazolidinedione for diabetes"
+              data-category="diabetes"
+            >
+              <div
+                class="h-48 bg-gradient-to-r from-purple-400 to-violet-500 flex items-center justify-center"
+              >
+                <i class="fas fa-prescription-bottle text-white text-6xl"></i>
+              </div>
+              <div class="p-6">
+                <div class="flex justify-between items-start">
+                  <div>
+                    <h3 class="text-xl font-bold text-gray-900">
+                      Pioglitazone 15mg
+                    </h3>
+                    <p class="text-gray-600 mt-1">
+                      Thiazolidinedione for diabetes
+                    </p>
+                  </div>
+                  <span
+                    class="bg-red-100 text-red-800 text-xs font-semibold px-2.5 py-0.5 rounded"
+                    >Rx</span
+                  >
+                </div>
+                <div class="mt-4 flex items-center justify-between">
+                  <span class="text-2xl font-bold text-gray-900">₹165</span>
+                  <button
+                    class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm"
+                  >
+                    Add to Cart
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div
+              class="card-hover bg-white rounded-xl shadow-md overflow-hidden"
+              data-name="Acarbose 50mg"
+              data-desc="Alpha-glucosidase inhibitor"
+              data-category="diabetes"
+            >
+              <div
+                class="h-48 bg-gradient-to-r from-orange-400 to-red-500 flex items-center justify-center"
+              >
+                <i class="fas fa-tablets text-white text-6xl"></i>
+              </div>
+              <div class="p-6">
+                <div class="flex justify-between items-start">
+                  <div>
+                    <h3 class="text-xl font-bold text-gray-900">
+                      Acarbose 50mg
+                    </h3>
+                    <p class="text-gray-600 mt-1">
+                      Alpha-glucosidase inhibitor
+                    </p>
+                  </div>
+                  <span
+                    class="bg-red-100 text-red-800 text-xs font-semibold px-2.5 py-0.5 rounded"
+                    >Rx</span
+                  >
+                </div>
+                <div class="mt-4 flex items-center justify-between">
+                  <span class="text-2xl font-bold text-gray-900">₹145</span>
+                  <button
+                    class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm"
+                  >
+                    Add to Cart
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-12 text-center">
+          <a
+            href="#"
+            class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-primary hover:bg-blue-700"
+          >
+            Browse Full Catalog
+            <i class="fas fa-arrow-right ml-2"></i>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Categories -->
+    <section class="py-16 bg-gradient-to-br from-blue-50 to-indigo-50">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-12">
+          <h2 class="text-3xl font-extrabold text-gray-900 sm:text-4xl">
+            Medicine Categories
+          </h2>
+          <p class="mt-3 text-xl text-gray-500">
+            Find medications by therapeutic category
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div class="bg-white rounded-xl shadow-md p-6 text-center card-hover">
+            <div
+              class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4"
+            >
+              <i class="fas fa-head-side-cough text-blue-600 text-2xl"></i>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900">Respiratory</h3>
+            <p class="mt-2 text-gray-600">
+              Cough, cold, and allergy medications
+            </p>
+          </div>
+
+          <div class="bg-white rounded-xl shadow-md p-6 text-center card-hover">
+            <div
+              class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4"
+            >
+              <i class="fas fa-heartbeat text-green-600 text-2xl"></i>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900">Cardiovascular</h3>
+            <p class="mt-2 text-gray-600">
+              Heart and blood pressure medications
+            </p>
+          </div>
+
+          <div class="bg-white rounded-xl shadow-md p-6 text-center card-hover">
+            <div
+              class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4"
+            >
+              <i class="fas fa-brain text-purple-600 text-2xl"></i>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900">Neurological</h3>
+            <p class="mt-2 text-gray-600">
+              Pain relief and mental health medications
+            </p>
+          </div>
+
+          <div class="bg-white rounded-xl shadow-md p-6 text-center card-hover">
+            <div
+              class="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4"
+            >
+              <i class="fas fa-stomach text-yellow-600 text-2xl"></i>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900">Digestive</h3>
+            <p class="mt-2 text-gray-600">Stomach and intestinal medications</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white mt-16">
+      <div class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+          <div>
+            <div class="flex items-center">
+              <i class="fas fa-heartbeat text-primary text-2xl mr-2"></i>
+              <span class="text-xl font-bold">MediMate</span>
+            </div>
+            <p class="mt-4 text-gray-400">
+              Your trusted AI-powered medical assistant for instant health
+              insights and support.
+            </p>
+          </div>
+
+          <div>
+            <h3 class="text-lg font-semibold">Services</h3>
+            <ul class="mt-4 space-y-2">
+              <li>
+                <a href="chatbot.html" class="text-gray-400 hover:text-white"
+                  >Medical Chatbot</a
+                >
+              </li>
+              <li>
+                <a href="#" class="text-gray-400 hover:text-white"
+                  >Symptom Checker</a
+                >
+              </li>
+              <li>
+                <a href="medicines.html" class="text-gray-400 hover:text-white"
+                  >E-Pharmacy</a
+                >
+              </li>
+              <li>
+                <a href="history.html" class="text-gray-400 hover:text-white"
+                  >Health Records</a
+                >
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 class="text-lg font-semibold">Company</h3>
+            <ul class="mt-4 space-y-2">
+              <li>
+                <a href="#" class="text-gray-400 hover:text-white">About Us</a>
+              </li>
+              <li>
+                <a href="#" class="text-gray-400 hover:text-white">Careers</a>
+              </li>
+              <li>
+                <a href="#" class="text-gray-400 hover:text-white"
+                  >Privacy Policy</a
+                >
+              </li>
+              <li>
+                <a href="#" class="text-gray-400 hover:text-white"
+                  >Terms of Service</a
+                >
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 class="text-lg font-semibold">Contact</h3>
+            <ul class="mt-4 space-y-2">
+              <li class="flex items-center">
+                <i class="fas fa-envelope mr-2 text-gray-400"></i>
+                <span class="text-gray-400">support@medimate.com</span>
+              </li>
+              <li class="flex items-center">
+                <i class="fas fa-phone mr-2 text-gray-400"></i>
+                <span class="text-gray-400">+1 (555) 123-4567</span>
+              </li>
+              <li class="flex items-center">
+                <i class="fas fa-map-marker-alt mr-2 text-gray-400"></i>
+                <span class="text-gray-400">San Francisco, CA</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div
+          class="mt-12 pt-8 border-t border-gray-700 flex flex-col md:flex-row justify-between items-center"
+        >
+          <p class="text-gray-400">© 2023 MediMate. All rights reserved.</p>
+          <div class="flex space-x-6 mt-4 md:mt-0">
+            <a href="#" class="text-gray-400 hover:text-white">
+              <i class="fab fa-facebook-f"></i>
+            </a>
+            <a href="#" class="text-gray-400 hover:text-white">
+              <i class="fab fa-twitter"></i>
+            </a>
+            <a href="#" class="text-gray-400 hover:text-white">
+              <i class="fab fa-instagram"></i>
+            </a>
+            <a href="#" class="text-gray-400 hover:text-white">
+              <i class="fab fa-linkedin-in"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Book Appointment Modal -->
+    <div
+      id="appointmentModal"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 hidden"
+    >
+      <div class="bg-white rounded-lg shadow-lg w-full max-w-md p-6 relative">
+        <button
+          id="closeModalBtn"
+          class="absolute top-2 right-2 text-gray-400 hover:text-gray-600 text-2xl"
+        >
+          &times;
+        </button>
+        <h2 class="text-2xl font-bold mb-4 text-primary">Book Appointment</h2>
+        <form id="appointmentForm" class="space-y-4">
+          <div>
+            <label class="block text-gray-700">Doctor</label>
+            <select
+              name="doctor"
+              required
+              class="w-full border rounded px-3 py-2"
+            >
+              <option value="">Select Doctor</option>
+              <option value="Dr. Emily Rodriguez">Dr. Emily Rodriguez</option>
+              <option value="Dr. John Smith">Dr. John Smith</option>
+              <option value="Dr. Priya Patel">Dr. Priya Patel</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-gray-700">Date</label>
+            <input
+              type="date"
+              name="date"
+              required
+              class="w-full border rounded px-3 py-2"
+            />
+          </div>
+          <div>
+            <label class="block text-gray-700">Time</label>
+            <input
+              type="time"
+              name="time"
+              required
+              class="w-full border rounded px-3 py-2"
+            />
+          </div>
+          <div>
+            <label class="block text-gray-700">Reason</label>
+            <textarea
+              name="reason"
+              required
+              class="w-full border rounded px-3 py-2"
+              placeholder="Describe your reason..."
+            ></textarea>
+          </div>
+          <button
+            type="submit"
+            class="w-full bg-primary text-white py-2 rounded hover:bg-blue-700 font-semibold"
+          >
+            Book Appointment
+          </button>
+        </form>
+        <div
+          id="appointmentSuccess"
+          class="hidden mt-4 text-green-600 font-semibold text-center"
+        >
+          Appointment booked successfully!
+        </div>
+      </div>
+    </div>
+    <!-- Cart Modal -->
+    <div
+      id="cartModal"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 hidden"
+    >
+      <div class="bg-white rounded-lg shadow-lg w-full max-w-md p-6 relative">
+        <button
+          id="closeCartBtn"
+          class="absolute top-2 right-2 text-gray-400 hover:text-gray-600 text-2xl"
+        >
+          &times;
+        </button>
+        <h2 class="text-2xl font-bold mb-4 text-primary">Your Cart</h2>
+        <div id="cartItems"></div>
+        <div class="mt-4 flex justify-between items-center">
+          <span class="font-bold text-lg"
+            >Total: <span id="cartTotal">₹0</span></span
+          >
+          <button
+            id="buyBtn"
+            class="bg-primary text-white px-4 py-2 rounded hover:bg-blue-700 font-semibold"
+          >
+            Buy
+          </button>
+        </div>
+      </div>
+    </div>
+    <!-- Payment Modal -->
+    <div
+      id="paymentModal"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 hidden"
+    >
+      <div class="bg-white rounded-lg shadow-lg w-full max-w-sm p-6 relative">
+        <button
+          id="closePaymentBtn"
+          class="absolute top-2 right-2 text-gray-400 hover:text-gray-600 text-2xl"
+        >
+          &times;
+        </button>
+        <h2 class="text-2xl font-bold mb-4 text-primary">Payment</h2>
+        <form id="paymentForm" class="space-y-4">
+          <div>
+            <label class="block text-gray-700">Choose Payment Method</label>
+            <select required class="w-full border rounded px-3 py-2">
+              <option value="">Select</option>
+              <option value="upi">UPI</option>
+              <option value="card">Credit/Debit Card</option>
+              <option value="netbanking">Netbanking</option>
+            </select>
+          </div>
+          <button
+            type="submit"
+            class="w-full bg-primary text-white py-2 rounded hover:bg-blue-700 font-semibold"
+          >
+            Pay
+          </button>
+        </form>
+        <div
+          id="paymentSuccess"
+          class="hidden mt-4 text-green-600 font-semibold text-center"
+        >
+          Payment Successful! Thank you for your purchase.
+        </div>
+      </div>
+    </div>
+    <script>
+      // Modal open/close logic
+      const bookBtn = document.getElementById("bookAppointmentBtn");
+      const modal = document.getElementById("appointmentModal");
+      const closeModalBtn = document.getElementById("closeModalBtn");
+      const appointmentForm = document.getElementById("appointmentForm");
+      const appointmentSuccess = document.getElementById("appointmentSuccess");
+
+      if (bookBtn && modal && closeModalBtn && appointmentForm) {
+        bookBtn.onclick = () => {
+          const user = JSON.parse(localStorage.getItem("loggedInUser"));
+          if (!user) {
+            window.location.href =
+              "login.html?redirect=medicines.html#book-appointment";
+          } else {
+            modal.classList.remove("hidden");
+          }
+        };
+        closeModalBtn.onclick = () => {
+          modal.classList.add("hidden");
+          appointmentSuccess.classList.add("hidden");
+          appointmentForm.reset();
+        };
+        window.onclick = (e) => {
+          if (e.target === modal) {
+            modal.classList.add("hidden");
+            appointmentSuccess.classList.add("hidden");
+            appointmentForm.reset();
+          }
+        };
+        appointmentForm.onsubmit = function (e) {
+          e.preventDefault();
+          // Simulate saving appointment (localStorage for now)
+          const formData = new FormData(appointmentForm);
+          const appointment = {
+            doctor: formData.get("doctor"),
+            date: formData.get("date"),
+            time: formData.get("time"),
+            reason: formData.get("reason"),
+            id: Date.now(),
+          };
+          let appointments = JSON.parse(
+            localStorage.getItem("appointments") || "[]"
+          );
+          appointments.push(appointment);
+          localStorage.setItem("appointments", JSON.stringify(appointments));
+          appointmentSuccess.classList.remove("hidden");
+          setTimeout(() => {
+            modal.classList.add("hidden");
+            appointmentSuccess.classList.add("hidden");
+            appointmentForm.reset();
+          }, 1500);
+        };
+      }
+      // --- Cart System ---
+      const medicines = [
+        {
+          id: 1,
+          name: "Paracetamol 500mg",
+          price: 49,
+          desc: "Pain reliever and fever reducer",
+        },
+        {
+          id: 2,
+          name: "Cetrizine 10mg",
+          price: 69,
+          desc: "Antihistamine for allergies",
+        },
+        {
+          id: 3,
+          name: "Amoxicillin 500mg",
+          price: 129,
+          desc: "Antibiotic for bacterial infections",
+        },
+        {
+          id: 4,
+          name: "Ibuprofen 200mg",
+          price: 79,
+          desc: "NSAID for pain and inflammation",
+        },
+        {
+          id: 5,
+          name: "Loratadine 10mg",
+          price: 99,
+          desc: "Antihistamine for allergies",
+        },
+        {
+          id: 6,
+          name: "Omeprazole 20mg",
+          price: 119,
+          desc: "Proton pump inhibitor for acid reflux",
+        },
+        {
+          id: 7,
+          name: "Azithromycin 250mg",
+          price: 149,
+          desc: "Antibiotic for infections",
+        },
+        {
+          id: 8,
+          name: "Metformin 500mg",
+          price: 89,
+          desc: "Diabetes management",
+        },
+        {
+          id: 9,
+          name: "Pantoprazole 40mg",
+          price: 109,
+          desc: "Acidity and ulcer treatment",
+        },
+        {
+          id: 10,
+          name: "Dolo 650mg",
+          price: 59,
+          desc: "Pain and fever relief",
+        },
+        {
+          id: 11,
+          name: "Aspirin 100mg",
+          price: 45,
+          desc: "Blood thinner and pain reliever",
+        },
+        {
+          id: 12,
+          name: "Diclofenac 50mg",
+          price: 85,
+          desc: "NSAID for severe pain and inflammation",
+        },
+        {
+          id: 13,
+          name: "Tramadol 50mg",
+          price: 120,
+          desc: "Opioid pain medication",
+        },
+        {
+          id: 14,
+          name: "Naproxen 500mg",
+          price: 95,
+          desc: "NSAID for arthritis and pain",
+        },
+        {
+          id: 15,
+          name: "Fexofenadine 120mg",
+          price: 110,
+          desc: "Non-drowsy antihistamine",
+        },
+        {
+          id: 16,
+          name: "Montelukast 10mg",
+          price: 140,
+          desc: "Leukotriene receptor antagonist",
+        },
+        {
+          id: 17,
+          name: "Diphenhydramine 25mg",
+          price: 55,
+          desc: "Sedating antihistamine",
+        },
+        {
+          id: 18,
+          name: "Levocetrizine 5mg",
+          price: 75,
+          desc: "Second generation antihistamine",
+        },
+        {
+          id: 19,
+          name: "Ciprofloxacin 500mg",
+          price: 160,
+          desc: "Broad spectrum antibiotic",
+        },
+        {
+          id: 20,
+          name: "Doxycycline 100mg",
+          price: 135,
+          desc: "Tetracycline antibiotic",
+        },
+        {
+          id: 21,
+          name: "Clarithromycin 500mg",
+          price: 175,
+          desc: "Macrolide antibiotic",
+        },
+        {
+          id: 22,
+          name: "Cephalexin 500mg",
+          price: 145,
+          desc: "Cephalosporin antibiotic",
+        },
+        {
+          id: 23,
+          name: "Ranitidine 150mg",
+          price: 65,
+          desc: "H2 blocker for acid reflux",
+        },
+        {
+          id: 24,
+          name: "Domperidone 10mg",
+          price: 85,
+          desc: "Anti-nausea medication",
+        },
+        {
+          id: 25,
+          name: "Lactulose 10ml",
+          price: 95,
+          desc: "Laxative for constipation",
+        },
+        {
+          id: 26,
+          name: "Bismuth Subsalicylate",
+          price: 75,
+          desc: "Anti-diarrheal medication",
+        },
+        {
+          id: 27,
+          name: "Glimepiride 1mg",
+          price: 125,
+          desc: "Sulfonylurea for diabetes",
+        },
+        {
+          id: 28,
+          name: "Sitagliptin 100mg",
+          price: 180,
+          desc: "DPP-4 inhibitor for diabetes",
+        },
+        {
+          id: 29,
+          name: "Pioglitazone 15mg",
+          price: 165,
+          desc: "Thiazolidinedione for diabetes",
+        },
+        {
+          id: 30,
+          name: "Acarbose 50mg",
+          price: 145,
+          desc: "Alpha-glucosidase inhibitor",
+        },
+      ];
+      function getCart() {
+        return JSON.parse(localStorage.getItem("cart") || "{}");
+      }
+      function setCart(cart) {
+        localStorage.setItem("cart", JSON.stringify(cart));
+      }
+      function updateCartCount() {
+        const cart = getCart();
+        let count = 0;
+        for (let id in cart) count += cart[id];
+        document.getElementById("cartCount").textContent = count;
+      }
+      function renderMedicines() {
+        const cards = document.querySelectorAll(".card-hover");
+        const cart = getCart();
+        cards.forEach((card, idx) => {
+          const med = medicines[idx];
+          // Cart logic
+          const btn = card.querySelector("button");
+          btn.onclick = function () {
+            let c = getCart();
+            c[med.id] = (c[med.id] || 0) + 1;
+            setCart(c);
+            updateCartCount();
+            renderMedicines();
+          };
+          // Remove old quantity controls
+          let qtyDiv = card.querySelector(".cart-qty");
+          if (qtyDiv) qtyDiv.remove();
+          if (cart[med.id]) {
+            const div = document.createElement("div");
+            div.className = "cart-qty flex items-center mt-2";
+            div.innerHTML = `<button class='px-2 py-1 bg-gray-200 rounded-l' data-minus='${
+              med.id
+            }'>-</button><span class='px-3'>${
+              cart[med.id]
+            }</span><button class='px-2 py-1 bg-gray-200 rounded-r' data-plus='${
+              med.id
+            }'>+</button>`;
+            btn.parentNode.insertBefore(div, btn.nextSibling);
+            div.querySelector(`[data-minus]`).onclick = function () {
+              let c = getCart();
+              c[med.id] = Math.max(0, (c[med.id] || 1) - 1);
+              if (c[med.id] === 0) delete c[med.id];
+              setCart(c);
+              updateCartCount();
+              renderMedicines();
+            };
+            div.querySelector(`[data-plus]`).onclick = function () {
+              let c = getCart();
+              c[med.id] = (c[med.id] || 0) + 1;
+              setCart(c);
+              updateCartCount();
+              renderMedicines();
+            };
+          }
+        });
+      }
+      // WORKING SEARCH AND FILTER FUNCTIONALITY
+      window.addEventListener("load", function () {
+        console.log("Page loaded, initializing search...");
+
+        // Get all elements
+        const searchBox = document.getElementById("search-medicines");
+        const clearBtn = document.getElementById("clear-search");
+        const categoryBtns = document.querySelectorAll("button[data-category]");
+        const medicineCards = document.querySelectorAll(".card-hover");
+        const resultsDiv = document.getElementById("results-count");
+
+        console.log("Search box found:", !!searchBox);
+        console.log("Category buttons found:", categoryBtns.length);
+        console.log("Medicine cards found:", medicineCards.length);
+
+        let selectedCategory = "all";
+
+        // Function to filter medicines
+        function filterMedicines() {
+          const searchText = searchBox ? searchBox.value.toLowerCase() : "";
+          let count = 0;
+
+          console.log(
+            "Filtering with search:",
+            searchText,
+            "category:",
+            selectedCategory
+          );
+
+          // Show/hide clear button
+          if (clearBtn) {
+            clearBtn.style.display = searchText ? "flex" : "none";
+          }
+
+          // Go through each medicine card
+          medicineCards.forEach((card) => {
+            const name = card.getAttribute("data-name") || "";
+            const desc = card.getAttribute("data-desc") || "";
+            const category = card.getAttribute("data-category") || "";
+            const title = card.querySelector("h3")
+              ? card.querySelector("h3").textContent
+              : "";
+            const description = card.querySelector("p")
+              ? card.querySelector("p").textContent
+              : "";
+
+            // Check category match
+            const categoryMatch =
+              selectedCategory === "all" || category === selectedCategory;
+
+            // Check search match
+            const searchMatch =
+              !searchText ||
+              name.toLowerCase().includes(searchText) ||
+              desc.toLowerCase().includes(searchText) ||
+              title.toLowerCase().includes(searchText) ||
+              description.toLowerCase().includes(searchText);
+
+            // Show or hide card
+            if (categoryMatch && searchMatch) {
+              card.style.display = "";
+              count++;
+            } else {
+              card.style.display = "none";
+            }
+          });
+
+          // Update results count
+          if (resultsDiv) {
+            if (count === 0) {
+              resultsDiv.textContent = "No medicines found";
+            } else if (searchText && selectedCategory !== "all") {
+              const catName = getCategoryDisplayName(selectedCategory);
+              resultsDiv.textContent = `Found ${count} medicine(s) in ${catName} matching "${searchText}"`;
+            } else if (searchText) {
+              resultsDiv.textContent = `Found ${count} medicine(s) matching "${searchText}"`;
+            } else if (selectedCategory !== "all") {
+              const catName = getCategoryDisplayName(selectedCategory);
+              resultsDiv.textContent = `Showing ${count} medicine(s) in ${catName}`;
+            } else {
+              resultsDiv.textContent = `Showing all ${count} medicines`;
+            }
+          }
+
+          console.log("Filtered to show:", count, "medicines");
+        }
+
+        // Helper function
+        function getCategoryDisplayName(cat) {
+          const names = {
+            pain: "Pain Relief",
+            allergy: "Allergy",
+            antibiotic: "Antibiotics",
+            digestive: "Digestive",
+            diabetes: "Diabetes",
+          };
+          return names[cat] || cat;
+        }
+
+        // Add search input listener
+        if (searchBox) {
+          searchBox.addEventListener("input", function () {
+            console.log("Search input changed:", this.value);
+            filterMedicines();
+          });
+
+          // Escape key
+          searchBox.addEventListener("keydown", function (e) {
+            if (e.key === "Escape") {
+              this.value = "";
+              filterMedicines();
+              this.blur();
+            }
+          });
+        }
+
+        // Add clear button listener
+        if (clearBtn) {
+          clearBtn.addEventListener("click", function () {
+            if (searchBox) {
+              searchBox.value = "";
+              filterMedicines();
+              searchBox.focus();
+            }
+          });
+        }
+
+        // Add category button listeners
+        categoryBtns.forEach((btn) => {
+          btn.addEventListener("click", function () {
+            const cat = this.getAttribute("data-category");
+            console.log("Category clicked:", cat);
+
+            // Update button styles
+            categoryBtns.forEach((b) => {
+              b.className = b.className.replace(
+                "bg-primary text-white",
+                "bg-gray-200 text-gray-700"
+              );
+            });
+            this.className = this.className.replace(
+              "bg-gray-200 text-gray-700",
+              "bg-primary text-white"
+            );
+
+            // Update category
+            selectedCategory = cat;
+
+            // Clear search
+            if (searchBox) {
+              searchBox.value = "";
+              if (clearBtn) {
+                clearBtn.style.display = "none";
+              }
+            }
+
+            // Apply filter
+            filterMedicines();
+          });
+        });
+
+        // Initial filter
+        console.log("Running initial filter...");
+        filterMedicines();
+
+        // Initialize cart functionality
+        renderMedicines();
+        updateCartCount();
+      });
+      // --- Cart Modal ---
+      const cartBtn = document.getElementById("cartBtn");
+      const cartModal = document.getElementById("cartModal");
+      const closeCartBtn = document.getElementById("closeCartBtn");
+      const cartItemsDiv = document.getElementById("cartItems");
+      const cartTotalSpan = document.getElementById("cartTotal");
+      const buyBtn = document.getElementById("buyBtn");
+      function renderCartModal() {
+        const cart = getCart();
+        let total = 0;
+        let html = "";
+        for (let id in cart) {
+          const med = medicines.find((m) => m.id == id);
+          if (!med) continue;
+          total += med.price * cart[id];
+          html += `<div class='flex justify-between items-center mb-2'><div><span class='font-semibold'>${med.name}</span><br><span class='text-sm text-gray-500'>₹${med.price} x ${cart[id]}</span></div><div class='flex items-center'><button class='px-2 py-1 bg-gray-200 rounded-l' onclick='updateCartQty(${med.id},-1)'>-</button><span class='px-3'>${cart[id]}</span><button class='px-2 py-1 bg-gray-200 rounded-r' onclick='updateCartQty(${med.id},1)'>+</button></div></div>`;
+        }
+        cartItemsDiv.innerHTML =
+          html || '<div class="text-gray-500">Your cart is empty.</div>';
+        cartTotalSpan.textContent = `₹${total}`;
+        buyBtn.disabled = total === 0;
+      }
+      window.updateCartQty = function (id, delta) {
+        let c = getCart();
+        c[id] = (c[id] || 0) + delta;
+        if (c[id] <= 0) delete c[id];
+        setCart(c);
+        updateCartCount();
+        renderMedicines();
+        renderCartModal();
+      };
+      if (cartBtn && cartModal && closeCartBtn) {
+        cartBtn.onclick = () => {
+          renderCartModal();
+          cartModal.classList.remove("hidden");
+        };
+        closeCartBtn.onclick = () => {
+          cartModal.classList.add("hidden");
+        };
+        window.onclick = (e) => {
+          if (e.target === cartModal) cartModal.classList.add("hidden");
+        };
+      }
+      buyBtn.onclick = function () {
+        cartModal.classList.add("hidden");
+        document.getElementById("paymentModal").classList.remove("hidden");
+      };
+      // --- Payment Modal ---
+      const paymentModal = document.getElementById("paymentModal");
+      const closePaymentBtn = document.getElementById("closePaymentBtn");
+      const paymentForm = document.getElementById("paymentForm");
+      const paymentSuccess = document.getElementById("paymentSuccess");
+      if (closePaymentBtn && paymentModal) {
+        closePaymentBtn.onclick = () => {
+          paymentModal.classList.add("hidden");
+          paymentSuccess.classList.add("hidden");
+          paymentForm.reset();
+        };
+        window.onclick = (e) => {
+          if (e.target === paymentModal) paymentModal.classList.add("hidden");
+        };
+      }
+      paymentForm.onsubmit = function (e) {
+        e.preventDefault();
+        paymentSuccess.classList.remove("hidden");
+        setTimeout(() => {
+          paymentModal.classList.add("hidden");
+          paymentSuccess.classList.add("hidden");
+          paymentForm.reset();
+          setCart({});
+          updateCartCount();
+          renderMedicines();
+        }, 1500);
+      };
+    </script>
+    <script>
+(function(){if(!window.chatbase||window.chatbase("getState")!=="initialized"){window.chatbase=(...arguments)=>{if(!window.chatbase.q){window.chatbase.q=[]}window.chatbase.q.push(arguments)};window.chatbase=new Proxy(window.chatbase,{get(target,prop){if(prop==="q"){return target.q}return(...args)=>target(prop,...args)}})}const onLoad=function(){const script=document.createElement("script");script.src="https://www.chatbase.co/embed.min.js";script.id="hNuFFiWlP9H7jCBHkGVmp";script.domain="www.chatbase.co";document.body.appendChild(script)};if(document.readyState==="complete"){onLoad()}else{window.addEventListener("load",onLoad)}})();
+</script>
+  </body>
+</html>

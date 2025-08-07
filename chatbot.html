@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chatbot - MediMate</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: "#3b82f6",
+              secondary: "#10b981",
+              accent: "#8b5cf6",
+              dark: "#1e293b",
+              light: "#f8fafc",
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
+
+      body {
+        font-family: "Poppins", sans-serif;
+        background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+      }
+
+      .card-hover {
+        transition: all 0.3s ease;
+      }
+
+      .card-hover:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
+          0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      }
+
+      .feature-icon {
+        width: 70px;
+        height: 70px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 20px;
+        margin-bottom: 20px;
+      }
+    </style>
+  </head>
+  <body class="min-h-screen">
+    <script>
+      if (!localStorage.getItem("loggedInUser")) {
+        window.location.href = "login.html?redirect=chatbot.html";
+      }
+    </script>
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg sticky top-0 z-50">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-16">
+          <div class="flex items-center">
+            <div class="flex-shrink-0 flex items-center">
+              <i class="fas fa-heartbeat text-primary text-2xl mr-2"></i>
+              <span class="text-xl font-bold text-gray-800">MediMate</span>
+            </div>
+            <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
+              <a
+                href="index.html"
+                class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                >Home</a
+              >
+              <a
+                href="chatbot.html"
+                class="border-primary text-gray-900 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                >Chatbot</a
+              >
+              <a
+                href="medicines.html"
+                class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                >Medicines</a
+              >
+              <a
+                href="history.html"
+                class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                >History</a
+              >
+              <a
+                href="profile.html"
+                class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                >Profile</a
+              >
+            </div>
+          </div>
+          <div class="hidden sm:ml-6 sm:flex sm:items-center space-x-4">
+            <button
+              id="bookAppointmentBtn"
+              class="bg-secondary text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition inline-flex items-center"
+            >
+              <i class="fas fa-calendar-check mr-2"></i>Book Appointment
+            </button>
+            <button
+              id="cartBtn"
+              class="relative text-gray-700 hover:text-primary focus:outline-none"
+            >
+              <i class="fas fa-shopping-cart text-2xl"></i>
+              <span
+                id="cartCount"
+                class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full px-1.5"
+                >0</span
+              >
+            </button>
+            <div id="navbarUser" class="flex items-center space-x-2"></div>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <script>
+      // Show user name and icon in navbar
+      const navbarUser = document.getElementById("navbarUser");
+      const user = JSON.parse(localStorage.getItem("loggedInUser"));
+      if (user && navbarUser) {
+        navbarUser.innerHTML = `<i class='fas fa-user-circle text-primary text-2xl'></i><span class='font-medium text-gray-800'>${
+          user.name || user.email
+        }</span> <button id='logoutBtn' class='ml-2 px-2 py-1 bg-red-500 text-white rounded hover:bg-red-700 text-xs'>Logout</button>`;
+        document.getElementById("logoutBtn").onclick = function () {
+          localStorage.removeItem("loggedInUser");
+          window.location.href = "index.html";
+        };
+      } else if (navbarUser) {
+        navbarUser.innerHTML = `<a href='login.html' class='bg-primary text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition inline-flex items-center'>Sign In</a>`;
+      }
+    </script>
+
+    <iframe
+      src="https://www.chatbase.co/chatbot-iframe/hNuFFiWlP9H7jCBHkGVmp"
+      frameborder="0"
+      width="100%"
+      height="700px"
+    ></iframe>
+  </body>
+</html>

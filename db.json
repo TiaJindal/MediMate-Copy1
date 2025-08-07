@@ -1,0 +1,101 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "name": "John Doe",
+      "email": "john@example.com",
+      "password": "pass123",
+      "medicalHistory": [
+        {
+          "id": 1,
+          "date": "2024-04-01",
+          "symptoms": ["fever", "headache", "body aches"],
+          "diagnosis": "Common Cold",
+          "treatment": ["Rest and hydration", "Paracetamol 500mg twice daily", "Vitamin C supplements"]
+        },
+        {
+          "id": 2,
+          "date": "2024-03-15",
+          "symptoms": ["sneezing", "runny nose", "itchy eyes"],
+          "diagnosis": "Allergic Rhinitis",
+          "treatment": ["Cetrizine 10mg once daily", "Avoid known allergens", "Saline nasal rinse"]
+        }
+      ]
+    }
+  ],
+  "medicines": [
+    {
+      "id": 1,
+      "name": "Paracetamol 500mg",
+      "description": "Pain reliever and fever reducer",
+      "price": 5.99,
+      "category": "Pain Relief",
+      "prescription": false
+    },
+    {
+      "id": 2,
+      "name": "Cetrizine 10mg",
+      "description": "Antihistamine for allergies",
+      "price": 8.99,
+      "category": "Allergy",
+      "prescription": false
+    },
+    {
+      "id": 3,
+      "name": "Amoxicillin 500mg",
+      "description": "Antibiotic for bacterial infections",
+      "price": 12.99,
+      "category": "Antibiotic",
+      "prescription": true
+    },
+    {
+      "id": 4,
+      "name": "Ibuprofen 200mg",
+      "description": "NSAID for pain and inflammation",
+      "price": 7.49,
+      "category": "Pain Relief",
+      "prescription": false
+    },
+    {
+      "id": 5,
+      "name": "Loratadine 10mg",
+      "description": "Antihistamine for allergies",
+      "price": 9.99,
+      "category": "Allergy",
+      "prescription": false
+    },
+    {
+      "id": 6,
+      "name": "Omeprazole 20mg",
+      "description": "Proton pump inhibitor for acid reflux",
+      "price": 11.99,
+      "category": "Digestive",
+      "prescription": false
+    }
+  ],
+  "chatHistory": [
+    {
+      "userId": 1,
+      "messages": [
+        {
+          "sender": "user",
+          "text": "I have a headache and fever",
+          "timestamp": "2024-04-01T10:30:00Z"
+        },
+        {
+          "sender": "bot",
+          "text": "Based on your symptoms of headache and fever, this could indicate a viral infection like the flu or a common cold...",
+          "timestamp": "2024-04-01T10:30:05Z"
+        }
+      ]
+    }
+  ],
+  "feedback": [
+    {
+      "messageId": 1234567890,
+      "rating": "positive",
+      "comment": "Very helpful response!",
+      "timestamp": "2024-04-01T10:35:00Z"
+    }
+  ]
+}
